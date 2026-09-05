@@ -26,7 +26,8 @@
     "smoke:views": "node scripts/view-credit-check.mjs",
     "ads:demo": "node scripts/seed-demo-ads.mjs",
     "ads:demo:off": "node scripts/seed-demo-ads.mjs --off",
-    "seed:demo-account": "node scripts/seed-demo-account.mjs"
+    "seed:demo-account": "node scripts/seed-demo-account.mjs",
+    "smoke:dmca": "node scripts/dmca-check.mjs"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

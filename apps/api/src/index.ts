@@ -14,6 +14,8 @@ import { playbackRouter } from "./routes/playback.js";
 import { trackRouter } from "./routes/track.js";
 import { adsRouter } from "./routes/ads.js";
 import { meRouter } from "./routes/me.js";
+import { dmcaRouter } from "./routes/dmca.js";
+import { adminRouter } from "./routes/admin.js";
 
 const app = express();
 
@@ -54,6 +56,8 @@ app.use("/api/playback", playbackRouter);
 app.use("/api/track", trackRouter);
 app.use("/api/ads", adsRouter);
 app.use("/api/me", meRouter);
+app.use("/api/dmca", dmcaRouter);
+app.use("/api/admin", adminRouter);
 
 app.use(notFound);
 app.use(errorHandler);

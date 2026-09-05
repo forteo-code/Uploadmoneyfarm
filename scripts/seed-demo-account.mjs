@@ -11,10 +11,12 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { readFile, mkdtemp, rm } from "node:fs/promises";
+import { PrismaClient } from "@prisma/client";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
 const run = promisify(execFile);
+const prisma = new PrismaClient();
 const API = process.env.API_PUBLIC_URL ?? "http://127.0.0.1:4000";
 const VIEWERS = Number(process.argv[2] ?? 25);
 
@@ -143,6 +145,7 @@ async function driveViews(slug, count) {
 
 async function main() {
   const token = await authenticate();
+  const userId = (await json(await fetch(`${API}/api/auth/me`, { headers: { authorization: `Bearer ${token}` } }))).user.id;
   const dir = await mkdtemp(path.join(tmpdir(), "dropreel-demo-"));
   try {
     const videos = [];
@@ -160,6 +163,32 @@ async function main() {
       log(`${v.title}: ${n}/${VIEWERS} views counted`);
     }
 
+    // Make the payout queue reviewable.
+    //
+    // Real earnings sit behind a 30-day hold and are far below the $50 minimum,
+    // so neither the uploader's withdraw button nor the admin approval queue
+    // can be exercised on a fresh demo. This clears the hold on what was
+    // actually earned and drops this one account's minimum - it does not invent
+    // earnings, and it touches only the demo account.
+    await prisma.$executeRaw`
+      UPDATE "LedgerEntry" SET "availableAt" = NOW() - INTERVAL '1 day'
+      WHERE "userId" = ${userId} AND "type" = 'EARNING'`;
+    await prisma.user.update({
+      where: { id: userId },
+      data: { minPayoutMicros: 1000n, payoutMethod: "CRYPTO_USDT_TRC20", payoutAddress: "TDemoUSDTAddressForReview000000000" },
+    });
+
+    const balanceRes = await fetch(`${API}/api/me/earnings`, { headers: { authorization: `Bearer ${token}` } });
+    const available = (await json(balanceRes)).balances.availableMicros;
+    if (BigInt(available) >= 1000n) {
+      const payoutRes = await fetch(`${API}/api/me/payouts`, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+        body: JSON.stringify({ amountMicros: available, method: "CRYPTO_USDT_TRC20", address: "TDemoUSDTAddressForReview000000000" }),
+      });
+      log(payoutRes.ok ? "filed a payout request for the admin queue" : "payout request skipped (one is already pending)");
+    }
+
     console.log(`\ndemo account ready - ${EMAIL} / ${PASSWORD}`);
     console.log(`${videos.length} videos, ${counted} paid views recorded.`);
   } finally {
@@ -167,4 +196,6 @@ async function main() {
   }
 }
 
-main().catch((err) => { console.error("failed:", err.message); process.exitCode = 1; });
+main()
+  .catch((err) => { console.error("failed:", err.message); process.exitCode = 1; })
+  .finally(() => prisma.$disconnect());

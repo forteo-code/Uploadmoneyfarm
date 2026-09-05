@@ -74,3 +74,23 @@ Seeded logins are in `packages/db/prisma/seed.ts` and are development-only.
   `scriptTemplate` carries `{{ZONE_ID}}` placeholders filled in from admin.
 
 See `docs/economics.md` for the unit-economics model this design is built around.
+
+## Verification
+
+```bash
+npm test                 # unit + database-backed tests (needs postgres running)
+npm run smoke:upload <file>   # upload -> encode -> ready, through the real API
+npm run smoke:hls <slug>      # HLS delivery and the geo quality cap
+npm run smoke:views <slug>    # genuine views earn; duplicates and bots do not
+npm run smoke:dmca            # notice -> queue -> takedown -> strike
+npm run smoke:browser <slug>  # player wiring in a real browser
+```
+
+Demo data and a self-hosted ad stack, for reviewing the product before any ad
+network has approved the site:
+
+```bash
+npm run seed:demo-account   # uploader with real videos, views and a payout request
+npm run ads:demo            # demo pre-roll, pop-under, overlay and banners
+npm run ads:demo:off        # back to live networks
+```
