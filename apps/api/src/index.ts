@@ -10,6 +10,7 @@ import { errorHandler, notFound } from "./middleware/error.js";
 import { authRouter } from "./routes/auth.js";
 import { uploadsRouter } from "./routes/uploads.js";
 import { videosRouter } from "./routes/videos.js";
+import { playbackRouter } from "./routes/playback.js";
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/auth", authRouter);
 app.use("/api/uploads", uploadsRouter);
 app.use("/api/videos", videosRouter);
+app.use("/api/playback", playbackRouter);
 
 app.use(notFound);
 app.use(errorHandler);

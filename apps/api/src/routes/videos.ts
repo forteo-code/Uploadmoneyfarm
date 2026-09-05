@@ -29,6 +29,37 @@ function publicVideoShape(v: {
   };
 }
 
+/**
+ * Public listing. Only READY, PUBLIC, non-quarantined rows are ever visible
+ * here; everything else is invisible to anyone but the owner and admins.
+ */
+videosRouter.get(
+  "/",
+  asyncHandler(async (req, res) => {
+    const take = Math.min(Number(req.query.limit ?? 24), 60);
+    const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
+
+    const videos = await prisma.video.findMany({
+      where: { status: "READY", visibility: "PUBLIC", moderation: { not: "QUARANTINED" } },
+      orderBy: { createdAt: "desc" },
+      take: take + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      select: {
+        id: true, slug: true, title: true, description: true, tags: true,
+        durationSec: true, posterKey: true, contentRating: true,
+        viewCount: true, createdAt: true,
+      },
+    });
+
+    const hasMore = videos.length > take;
+    const page = hasMore ? videos.slice(0, take) : videos;
+    res.json({
+      videos: page.map(publicVideoShape),
+      nextCursor: hasMore ? page[page.length - 1]?.id ?? null : null,
+    });
+  }),
+);
+
 /** Owner's library. Includes in-flight and failed items, which the public view never sees. */
 videosRouter.get(
   "/mine",

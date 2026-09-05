@@ -2,8 +2,13 @@
   "name": "uploadmoneyfarm",
   "private": true,
   "version": "0.1.0",
-  "workspaces": ["packages/*", "apps/*"],
-  "engines": { "node": ">=20" },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
@@ -14,7 +19,10 @@
     "db:seed": "npm run seed -w @umf/db",
     "dev:api": "npm run dev -w @umf/api",
     "dev:worker": "npm run dev -w @umf/worker",
-    "dev:web": "npm run dev -w @umf/web"
+    "dev:web": "npm run dev -w @umf/web",
+    "smoke:upload": "node scripts/e2e-upload.mjs",
+    "smoke:hls": "node scripts/hls-check.mjs",
+    "smoke:browser": "node scripts/browser-smoke.mjs"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

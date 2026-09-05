@@ -12,6 +12,7 @@ import {
   buildSpriteVtt, extractGrayFrame,
 } from "./lib/ffmpeg.js";
 import { phashFromGrayFrame, hammingDistance, PHASH_MATCH_THRESHOLD } from "./lib/phash.js";
+import { writeCappedMasters } from "./lib/master.js";
 
 export type TranscodeJob = { videoId: string; sourceKey: string };
 
@@ -136,6 +137,11 @@ export async function runTranscode(job: TranscodeJob): Promise<void> {
     log.info({ rungs: rungs.map((r) => r.height) }, "encoding ladder selected");
 
     await encodeHls(inputPath, outDir, rungs, meta);
+
+    // Per-cap master playlists, so the geo quality ceiling is enforced by which
+    // playlist we hand out rather than trusted to the client.
+    const cappedMasters = await writeCappedMasters(outDir);
+    log.info({ caps: cappedMasters }, "capped master playlists written");
 
     const posterPath = path.join(workDir, "poster.jpg");
     await extractPoster(inputPath, posterPath, meta.durationSec);
