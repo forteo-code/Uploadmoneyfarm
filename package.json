@@ -22,7 +22,10 @@
     "dev:web": "npm run dev -w @umf/web",
     "smoke:upload": "node scripts/e2e-upload.mjs",
     "smoke:hls": "node scripts/hls-check.mjs",
-    "smoke:browser": "node scripts/browser-smoke.mjs"
+    "smoke:browser": "node scripts/browser-smoke.mjs",
+    "smoke:views": "node scripts/view-credit-check.mjs",
+    "ads:demo": "node scripts/seed-demo-ads.mjs",
+    "ads:demo:off": "node scripts/seed-demo-ads.mjs --off"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

@@ -11,6 +11,8 @@ import { authRouter } from "./routes/auth.js";
 import { uploadsRouter } from "./routes/uploads.js";
 import { videosRouter } from "./routes/videos.js";
 import { playbackRouter } from "./routes/playback.js";
+import { trackRouter } from "./routes/track.js";
+import { adsRouter } from "./routes/ads.js";
 
 const app = express();
 
@@ -48,6 +50,8 @@ app.use("/api/auth", authRouter);
 app.use("/api/uploads", uploadsRouter);
 app.use("/api/videos", videosRouter);
 app.use("/api/playback", playbackRouter);
+app.use("/api/track", trackRouter);
+app.use("/api/ads", adsRouter);
 
 app.use(notFound);
 app.use(errorHandler);

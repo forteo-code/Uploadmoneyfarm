@@ -105,8 +105,16 @@ export async function buildAdPlan(opts: {
 
   const country = (opts.country ?? "").toUpperCase();
 
+  // Demo mode swaps the whole stack for self-hosted placeholder inventory, so
+  // the operator can see and tune the real viewer experience before any network
+  // has approved them. It is exclusive: demo and live inventory never mix.
+  const demoMode = await getConfig<boolean>("ads.demoMode", false);
+
   const networks = await prisma.adNetwork.findMany({
-    where: { enabled: true },
+    where: {
+      enabled: true,
+      ...(demoMode ? { key: { startsWith: "demo_" } } : { key: { not: { startsWith: "demo_" } } }),
+    },
     select: {
       id: true, key: true, name: true, slotType: true, priority: true, weight: true,
       scriptTemplate: true, vastTemplate: true, geoAllow: true, geoDeny: true,
