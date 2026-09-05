@@ -10,3 +10,4 @@ coverage/
 /data/
 /tmp-media/
 packages/db/generated/
+tmp-media/
