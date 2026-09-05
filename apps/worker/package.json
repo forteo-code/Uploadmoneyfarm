@@ -1,5 +1,5 @@
 {
-  "name": "@umf/worker",
+  "name": "@dropreel/worker",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.687.0",
-    "@umf/db": "*",
-    "@umf/shared": "*",
+    "@dropreel/db": "*",
+    "@dropreel/shared": "*",
     "bullmq": "^5.28.2",
     "ioredis": "^5.4.1",
     "pino": "^9.5.0",

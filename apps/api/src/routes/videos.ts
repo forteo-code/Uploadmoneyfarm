@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { prisma } from "@umf/db";
-import { updateVideoSchema } from "@umf/shared";
+import { prisma } from "@dropreel/db";
+import { updateVideoSchema } from "@dropreel/shared";
 import { asyncHandler, HttpError } from "../middleware/error.js";
 import { requireAuth, requireActiveUser, optionalAuth } from "../middleware/auth.js";
 import { publicUrl } from "../lib/storage.js";
+import { getConfig } from "../lib/config.js";
 
 export const videosRouter = Router();
 
@@ -30,12 +31,24 @@ function publicVideoShape(v: {
 }
 
 /**
- * Public listing. Only READY, PUBLIC, non-quarantined rows are ever visible
- * here; everything else is invisible to anyone but the owner and admins.
+ * Public listing, OFF by default.
+ *
+ * A browsable index is a deliberate choice not to make. Every established host
+ * in this category (Doodstream, Streamtape, MixDrop) omits one, because an
+ * index is what turns a neutral file host into a content platform: it hands
+ * rights holders a searchable catalogue to trawl for takedowns, and it makes
+ * "we had no idea what was on there" a much harder position to hold. Uploaders
+ * distribute their own links; that is the product.
+ *
+ * Left behind a config flag rather than deleted so an operator running only
+ * first-party content can switch it on deliberately.
  */
 videosRouter.get(
   "/",
   asyncHandler(async (req, res) => {
+    const browseEnabled = await getConfig<boolean>("site.publicBrowse", false);
+    if (!browseEnabled) return res.json({ videos: [], nextCursor: null, browseDisabled: true });
+
     const take = Math.min(Number(req.query.limit ?? 24), 60);
     const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
 

@@ -1,5 +1,5 @@
 {
-  "name": "uploadmoneyfarm",
+  "name": "dropreel",
   "private": true,
   "version": "0.1.0",
   "workspaces": [
@@ -13,19 +13,20 @@
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "db:generate": "npm run generate -w @umf/db",
-    "db:migrate": "npm run migrate -w @umf/db",
-    "db:push": "npm run push -w @umf/db",
-    "db:seed": "npm run seed -w @umf/db",
-    "dev:api": "npm run dev -w @umf/api",
-    "dev:worker": "npm run dev -w @umf/worker",
-    "dev:web": "npm run dev -w @umf/web",
+    "db:generate": "npm run generate -w @dropreel/db",
+    "db:migrate": "npm run migrate -w @dropreel/db",
+    "db:push": "npm run push -w @dropreel/db",
+    "db:seed": "npm run seed -w @dropreel/db",
+    "dev:api": "npm run dev -w @dropreel/api",
+    "dev:worker": "npm run dev -w @dropreel/worker",
+    "dev:web": "npm run dev -w @dropreel/web",
     "smoke:upload": "node scripts/e2e-upload.mjs",
     "smoke:hls": "node scripts/hls-check.mjs",
     "smoke:browser": "node scripts/browser-smoke.mjs",
     "smoke:views": "node scripts/view-credit-check.mjs",
     "ads:demo": "node scripts/seed-demo-ads.mjs",
-    "ads:demo:off": "node scripts/seed-demo-ads.mjs --off"
+    "ads:demo:off": "node scripts/seed-demo-ads.mjs --off",
+    "seed:demo-account": "node scripts/seed-demo-account.mjs"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

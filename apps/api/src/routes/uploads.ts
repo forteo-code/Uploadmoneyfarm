@@ -1,7 +1,7 @@
 import { Router } from "express";
 import path from "node:path";
-import { prisma } from "@umf/db";
-import { createUploadSchema, completeUploadSchema } from "@umf/shared";
+import { prisma } from "@dropreel/db";
+import { createUploadSchema, completeUploadSchema } from "@dropreel/shared";
 import { asyncHandler, HttpError } from "../middleware/error.js";
 import { requireAuth, requireActiveUser } from "../middleware/auth.js";
 import { rateLimit } from "../middleware/rateLimit.js";

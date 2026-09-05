@@ -1,14 +1,14 @@
 import crypto from "node:crypto";
 import { Router } from "express";
-import { prisma } from "@umf/db";
-import { heartbeatSchema, adImpressionSchema, VIEW_DEDUPE_WINDOW_SECONDS, HEARTBEAT_MIN_INTERVAL_SECONDS } from "@umf/shared";
+import { prisma } from "@dropreel/db";
+import { heartbeatSchema, adImpressionSchema, VIEW_DEDUPE_WINDOW_SECONDS, HEARTBEAT_MIN_INTERVAL_SECONDS } from "@dropreel/shared";
 import { asyncHandler, HttpError } from "../middleware/error.js";
 import { rateLimit } from "../middleware/rateLimit.js";
 import { verifyPlaybackToken, tokenHash } from "../lib/playbackToken.js";
 import { redis } from "../lib/redis.js";
 import { dayBucket } from "../lib/crypto.js";
 import { evaluateCountability, watchThresholdSeconds } from "../lib/views.js";
-import { creditView, recordUncountedView, floorToHour } from "../lib/earnings.js";
+import { creditView, applyViewAggregates, floorToHour } from "../lib/earnings.js";
 import { logger } from "../lib/logger.js";
 
 export const trackRouter = Router();
@@ -54,7 +54,8 @@ async function loadSession(token: string) {
  */
 trackRouter.post(
   "/heartbeat",
-  rateLimit({ windowSeconds: 60, max: 120, keyPrefix: "heartbeat" }),
+  // ~10 heartbeats per viewer per minute; sized for a shared NAT egress.
+  rateLimit({ windowSeconds: 60, max: 6000, keyPrefix: "heartbeat" }),
   asyncHandler(async (req, res) => {
     const input = heartbeatSchema.parse(req.body);
     const session = await loadSession(input.token);
@@ -149,33 +150,39 @@ trackRouter.post(
     const countryConfig = await prisma.countryConfig.findUnique({ where: { code: country } });
     const rpmMicros = countryConfig?.rpmMicros ?? 350_000n;
 
-    await prisma.$transaction(async (tx) => {
-      const view = await tx.view.create({
-        data: {
-          videoId: session.videoId,
-          uploaderId: session.video.ownerId,
-          playbackSessionId: session.id,
-          visitorHash: vKey,
-          ipHash: session.ipHash,
-          country: session.country,
-          asn: session.asn,
-          isDatacenter: session.isDatacenter,
-          isBot: session.isBot,
-          referrerDomain: session.referrerDomain,
-          embedDomain: session.embedDomain,
-          watchedSeconds,
-          heartbeats,
-          isCountable: shouldPay,
-          // Non-countable views are stored WITH their reasons on purpose: this
-          // is the evidence trail for an uploader disputing their numbers, and
-          // the data for tuning these rules against real traffic.
-          fraudReasons: verdict.reasons,
-          cpmTier: session.cpmTier,
-        },
-        select: { id: true },
-      });
+    // The atomic core is only the two rows that must agree: the View and its
+    // ledger credit. Both are inserts on rows nothing else touches, so this
+    // transaction takes no contended locks and finishes in milliseconds.
+    const { grossMicros, uploaderMicros } = await prisma.$transaction(
+      async (tx) => {
+        const view = await tx.view.create({
+          data: {
+            videoId: session.videoId,
+            uploaderId: session.video.ownerId,
+            playbackSessionId: session.id,
+            visitorHash: vKey,
+            ipHash: session.ipHash,
+            country: session.country,
+            asn: session.asn,
+            isDatacenter: session.isDatacenter,
+            isBot: session.isBot,
+            referrerDomain: session.referrerDomain,
+            embedDomain: session.embedDomain,
+            watchedSeconds,
+            heartbeats,
+            isCountable: shouldPay,
+            // Non-countable views are stored WITH their reasons on purpose:
+            // this is the evidence trail for an uploader disputing their
+            // numbers, and the data for tuning these rules against real
+            // traffic.
+            fraudReasons: verdict.reasons,
+            cpmTier: session.cpmTier,
+          },
+          select: { id: true },
+        });
 
-      if (shouldPay) {
+        if (!shouldPay) return { grossMicros: 0n, uploaderMicros: 0n };
+
         const credited = await creditView({
           tx,
           viewId: view.id,
@@ -188,32 +195,28 @@ trackRouter.post(
           rpmMicros,
         });
         await tx.view.update({ where: { id: view.id }, data: { earnedMicros: credited.uploaderMicros } });
-        await tx.video.update({
-          where: { id: session.videoId },
-          data: {
-            viewCount: { increment: 1n },
-            countableViewCount: { increment: 1n },
-            earnedMicros: { increment: credited.uploaderMicros },
-            lastViewedAt: now,
-          },
-        });
-      } else {
-        await recordUncountedView({
-          tx,
-          videoId: session.videoId,
-          uploaderId: session.video.ownerId,
-          country,
-          cpmTier: session.cpmTier,
-          hourStart,
-        });
-        await tx.video.update({
-          where: { id: session.videoId },
-          data: { viewCount: { increment: 1n }, lastViewedAt: now },
-        });
-      }
+        return credited;
+      },
+      // Headroom over the default so a slow disk cannot drop a paid view.
+      { timeout: 15_000, maxWait: 10_000 },
+    );
 
-      await tx.playbackSession.update({ where: { id: updated.id }, data: { countedAt: now } });
-    });
+    // Derived aggregates, outside the transaction. A failure here costs a
+    // counter, never a payment - the ledger row above is already durable and
+    // rollups are rebuildable from the View table.
+    await applyViewAggregates({
+      videoId: session.videoId,
+      uploaderId: session.video.ownerId,
+      country,
+      cpmTier: session.cpmTier,
+      hourStart,
+      countable: shouldPay,
+      grossMicros,
+      uploaderMicros,
+      viewedAt: now,
+    }).catch((err) => logger.error({ err, videoId: session.videoId }, "view aggregates failed"));
+
+    await prisma.playbackSession.update({ where: { id: updated.id }, data: { countedAt: now } });
 
     logger.debug(
       { videoId: session.videoId, counted: shouldPay, reasons: verdict.reasons, watchedSeconds },
@@ -231,7 +234,9 @@ trackRouter.post(
  */
 trackRouter.post(
   "/impression",
-  rateLimit({ windowSeconds: 60, max: 120, keyPrefix: "impression" }),
+  // A single page view reports one impression per ad unit, so this scales
+  // with ads.bannerCount times concurrent viewers on one address.
+  rateLimit({ windowSeconds: 60, max: 12000, keyPrefix: "impression" }),
   asyncHandler(async (req, res) => {
     const input = adImpressionSchema.parse(req.body);
     const session = await loadSession(input.token);

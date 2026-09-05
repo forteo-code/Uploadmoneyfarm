@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { env } from "../env.js";
-import { LADDER, HLS_SEGMENT_SECONDS } from "@umf/shared";
+import { LADDER, HLS_SEGMENT_SECONDS } from "@dropreel/shared";
 import { logger } from "./logger.js";
 
 export type ProbeResult = {

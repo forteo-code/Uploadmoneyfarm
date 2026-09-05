@@ -22,6 +22,7 @@ export type PlaybackResponse = {
   };
   playback: { manifest: string; maxHeight: number; availableHeights: number[] };
   ads: Partial<Record<"PREROLL" | "POPUNDER" | "OVERLAY" | "BANNER" | "INTERSTITIAL", AdPlacement[]>>;
+  adLayout: { bannerCount: number; stickyFooter: boolean; clickAd: boolean; overlay: boolean };
   policy: { ageGate: boolean };
 };
 

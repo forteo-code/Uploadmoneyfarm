@@ -6,7 +6,7 @@ import {
   TIER_MAX_HEIGHT,
   DEFAULT_REV_SHARE_BPS,
   DEFAULT_MIN_PAYOUT_MICROS,
-} from "@umf/shared";
+} from "@dropreel/shared";
 
 const prisma = new PrismaClient();
 
@@ -149,33 +149,48 @@ async function main() {
   console.log(`seeded ${AD_NETWORKS.length} ad networks`);
 
   // ---- Accounts ----
-  const adminPass = await bcrypt.hash("admin-dev-password", 10);
-  await prisma.user.upsert({
-    where: { email: "admin@uploadmoneyfarm.local" },
-    update: {},
-    create: {
-      email: "admin@uploadmoneyfarm.local",
-      passwordHash: adminPass,
-      displayName: "Admin",
-      role: UserRole.ADMIN,
-      referralCode: "ADMIN0",
-      revShareBps: DEFAULT_REV_SHARE_BPS,
-      minPayoutMicros: DEFAULT_MIN_PAYOUT_MICROS,
-    },
-  });
+  /**
+   * Seed accounts must survive re-running against a database that already has
+   * data - including one seeded under a previous set of emails, where the
+   * preferred referral code is already taken by an older row. Falls back to a
+   * random code rather than failing the whole seed.
+   */
+  async function ensureUser(opts: {
+    email: string; password: string; displayName: string; preferredCode: string; role?: UserRole;
+  }) {
+    const existing = await prisma.user.findUnique({ where: { email: opts.email }, select: { id: true } });
+    if (existing) return existing.id;
 
-  const uploaderPass = await bcrypt.hash("uploader-dev-password", 10);
-  await prisma.user.upsert({
-    where: { email: "uploader@uploadmoneyfarm.local" },
-    update: {},
-    create: {
-      email: "uploader@uploadmoneyfarm.local",
-      passwordHash: uploaderPass,
-      displayName: "Demo Uploader",
-      referralCode: "DEMO01",
-      revShareBps: DEFAULT_REV_SHARE_BPS,
-      minPayoutMicros: DEFAULT_MIN_PAYOUT_MICROS,
-    },
+    const codeTaken = await prisma.user.findUnique({
+      where: { referralCode: opts.preferredCode },
+      select: { id: true },
+    });
+    const referralCode = codeTaken
+      ? `${opts.preferredCode.slice(0, 3)}${Math.floor(Math.random() * 900 + 100)}`
+      : opts.preferredCode;
+
+    const created = await prisma.user.create({
+      data: {
+        email: opts.email,
+        passwordHash: await bcrypt.hash(opts.password, 10),
+        displayName: opts.displayName,
+        role: opts.role ?? UserRole.UPLOADER,
+        referralCode,
+        revShareBps: DEFAULT_REV_SHARE_BPS,
+        minPayoutMicros: DEFAULT_MIN_PAYOUT_MICROS,
+      },
+      select: { id: true },
+    });
+    return created.id;
+  }
+
+  await ensureUser({
+    email: "admin@dropreel.local", password: "admin-dev-password",
+    displayName: "Admin", preferredCode: "ADMIN0", role: UserRole.ADMIN,
+  });
+  await ensureUser({
+    email: "uploader@dropreel.local", password: "uploader-dev-password",
+    displayName: "Demo Uploader", preferredCode: "DEMO01",
   });
   console.log("seeded admin + demo uploader");
 
@@ -188,6 +203,18 @@ async function main() {
     ["content.blockedCountries", []],
     ["ads.enabled", true],
     ["ads.maxPopundersPerVisitorPerHour", 1],
+    // Ad density. These are the revenue/usability dial - raise them and gross
+    // impressions rise while fill rate and per-unit CPM fall, so the right
+    // values are found by moving them and watching revenue per thousand views,
+    // not by picking once.
+    ["ads.bannerCount", 20],
+    ["ads.stickyFooterEnabled", true],
+    ["ads.clickAdEnabled", true],
+    ["ads.overlayEnabled", true],
+    ["ads.maxClickAdsPerVisitorPerHour", 1],
+    // A browsable index is off by default: it turns a neutral file host into a
+    // content platform and hands rights holders a catalogue to trawl.
+    ["site.publicBrowse", false],
     ["ads.prerollEnabled", true],
     ["payout.holdDays", 30],
     ["payout.minMicros", DEFAULT_MIN_PAYOUT_MICROS.toString()],

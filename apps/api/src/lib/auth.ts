@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { prisma } from "@umf/db";
+import { prisma } from "@dropreel/db";
 import { env } from "../env.js";
 import { randomToken, sha256Hex, hashIp, hashUa } from "./crypto.js";
 

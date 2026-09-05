@@ -1,5 +1,5 @@
-import { prisma, type Prisma } from "@umf/db";
-import { applyRevShare, EARNINGS_HOLD_DAYS } from "@umf/shared";
+import { prisma, type Prisma } from "@dropreel/db";
+import { applyRevShare, EARNINGS_HOLD_DAYS } from "@dropreel/shared";
 import { getConfig } from "./config.js";
 
 /**
@@ -31,6 +31,8 @@ export async function creditView(params: {
   rpmMicros: bigint;
 }): Promise<{ grossMicros: bigint; uploaderMicros: bigint }> {
   const { tx } = params;
+  // NOTE: this writes only the ledger row. Rollup and counter updates are
+  // deliberately NOT here - see applyViewAggregates below for why.
 
   // RPM is revenue per 1000 views, so one view is a thousandth of it.
   const grossMicros = params.rpmMicros / 1000n;
@@ -54,49 +56,39 @@ export async function creditView(params: {
     });
   }
 
-  // Hourly rollup is the read model for dashboards and payouts - the raw View
-  // table is never aggregated for those. Upsert on the natural key makes a
-  // re-run of any backfill safe.
-  await tx.viewRollupHourly.upsert({
-    where: {
-      videoId_hourStart_country: {
-        videoId: params.videoId,
-        hourStart: params.hourStart,
-        country: params.country,
-      },
-    },
-    create: {
-      videoId: params.videoId,
-      uploaderId: params.uploaderId,
-      hourStart: params.hourStart,
-      country: params.country,
-      cpmTier: params.cpmTier,
-      views: 1n,
-      countableViews: 1n,
-      grossMicros,
-      uploaderMicros,
-    },
-    update: {
-      views: { increment: 1n },
-      countableViews: { increment: 1n },
-      grossMicros: { increment: grossMicros },
-      uploaderMicros: { increment: uploaderMicros },
-    },
-  });
-
   return { grossMicros, uploaderMicros };
 }
 
-/** Records a non-countable view in the rollup without paying for it. */
-export async function recordUncountedView(params: {
-  tx: Prisma.TransactionClient;
+/**
+ * Applies the derived aggregates for a view: the hourly rollup and the
+ * denormalised counters on Video.
+ *
+ * Deliberately OUTSIDE the crediting transaction. Every viewer of the same
+ * video contends on the same Video row and the same (video, hour, country)
+ * rollup row, so holding those locks for the life of an interactive
+ * transaction serialises concurrent viewers behind each other - under real
+ * concurrency that produced Prisma P2028 timeouts and silently dropped views
+ * along with the revenue attached to them, precisely when a video got popular.
+ *
+ * Run as individual statements the row locks are held for microseconds instead.
+ * These are safe to separate because they are derived data, not the source of
+ * truth: LedgerEntry is authoritative for money, and ViewRollupHourly can be
+ * rebuilt from the View table if a process dies mid-write.
+ */
+export async function applyViewAggregates(params: {
   videoId: string;
   uploaderId: string;
   country: string;
   cpmTier: number;
   hourStart: Date;
+  countable: boolean;
+  grossMicros: bigint;
+  uploaderMicros: bigint;
+  viewedAt: Date;
 }): Promise<void> {
-  await params.tx.viewRollupHourly.upsert({
+  const { countable } = params;
+
+  await prisma.viewRollupHourly.upsert({
     where: {
       videoId_hourStart_country: {
         videoId: params.videoId,
@@ -111,9 +103,31 @@ export async function recordUncountedView(params: {
       country: params.country,
       cpmTier: params.cpmTier,
       views: 1n,
-      countableViews: 0n,
+      countableViews: countable ? 1n : 0n,
+      grossMicros: countable ? params.grossMicros : 0n,
+      uploaderMicros: countable ? params.uploaderMicros : 0n,
     },
-    update: { views: { increment: 1n } },
+    update: {
+      views: { increment: 1n },
+      ...(countable
+        ? {
+            countableViews: { increment: 1n },
+            grossMicros: { increment: params.grossMicros },
+            uploaderMicros: { increment: params.uploaderMicros },
+          }
+        : {}),
+    },
+  });
+
+  await prisma.video.update({
+    where: { id: params.videoId },
+    data: {
+      viewCount: { increment: 1n },
+      lastViewedAt: params.viewedAt,
+      ...(countable
+        ? { countableViewCount: { increment: 1n }, earnedMicros: { increment: params.uploaderMicros } }
+        : {}),
+    },
   });
 }
 

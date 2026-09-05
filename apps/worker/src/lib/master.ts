@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { LADDER } from "@umf/shared";
+import { LADDER } from "@dropreel/shared";
 
 /**
  * Per-cap master playlists.

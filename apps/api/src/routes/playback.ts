@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { Router } from "express";
-import { prisma } from "@umf/db";
-import { tierForCountry, PLAYBACK_TOKEN_TTL_SECONDS } from "@umf/shared";
+import { prisma } from "@dropreel/db";
+import { tierForCountry, PLAYBACK_TOKEN_TTL_SECONDS } from "@dropreel/shared";
 import { asyncHandler, HttpError } from "../middleware/error.js";
 import { rateLimit } from "../middleware/rateLimit.js";
 import { optionalAuth } from "../middleware/auth.js";
@@ -9,7 +9,7 @@ import { clientIp, userAgent, referrerDomain } from "../lib/request.js";
 import { hashIp, hashUa, visitorHash, dayBucket } from "../lib/crypto.js";
 import { lookupCountry, lookupAsn, isDatacenterOrg } from "../lib/geoip.js";
 import { signPlaybackToken, tokenHash } from "../lib/playbackToken.js";
-import { buildAdPlan } from "../lib/ads.js";
+import { buildAdPlan, getAdLayout } from "../lib/ads.js";
 import { getConfig } from "../lib/config.js";
 import { publicUrl } from "../lib/storage.js";
 import { logger } from "../lib/logger.js";
@@ -34,7 +34,8 @@ function highestAllowed(available: number[], requested: number): number {
 playbackRouter.post(
   "/:slug",
   optionalAuth,
-  rateLimit({ windowSeconds: 60, max: 60, keyPrefix: "playback" }),
+  // Generous: one carrier-grade NAT address can front an entire mobile network.
+  rateLimit({ windowSeconds: 60, max: 1200, keyPrefix: "playback" }),
   asyncHandler(async (req, res) => {
     const video = await prisma.video.findUnique({
       where: { slug: req.params.slug },
@@ -100,6 +101,7 @@ playbackRouter.post(
     });
 
     const adPlan = await buildAdPlan({ visitorHash: vHash, country, videoId: video.id, isBot });
+    const adLayout = await getAdLayout();
 
     const ageGate = await getConfig<boolean>("content.requireAgeGate", true);
 
@@ -127,6 +129,7 @@ playbackRouter.post(
         availableHeights: available.filter((h) => h <= servedMaxHeight),
       },
       ads: adPlan,
+      adLayout,
       policy: { ageGate: ageGate && video.contentRating === "ADULT" },
     });
   }),

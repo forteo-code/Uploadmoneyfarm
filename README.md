@@ -1,4 +1,4 @@
-# Uploadmoneyfarm
+# Dropreel
 
 A video host where the uploader is the customer. Upload a file, get a link and an
 embed code, earn a share of the ad revenue on every countable view.

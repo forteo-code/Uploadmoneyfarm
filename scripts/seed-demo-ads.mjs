@@ -85,6 +85,12 @@ const DEMO_NETWORKS = [
     scriptTemplate: creative("Overlay ad", 468, 60, "Sits over the video after 10 seconds. Dismissible."),
   },
   {
+    key: "demo_interstitial", name: "Demo click-to-open", slotType: "INTERSTITIAL",
+    priority: 1, weight: 100, estCpmMicros: 1_200_000n, frequencyCapPerHour: 50,
+    // Fires on the click AFTER playback starts - see ClickAd for why.
+    scriptTemplate: `<script>try{window.open('${API}/api/ads/demo/landing?src=click','_blank')}catch(e){}</script>`,
+  },
+  {
     key: "demo_banner", name: "Demo side banner", slotType: "BANNER",
     priority: 1, weight: 100, estCpmMicros: 400_000n, frequencyCapPerHour: 50,
     scriptTemplate: creative("Banner ad", 300, 250, "Beside the player on the watch page."),

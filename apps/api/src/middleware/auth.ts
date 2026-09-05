@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { prisma } from "@umf/db";
+import { prisma } from "@dropreel/db";
 import { verifyAccessToken } from "../lib/auth.js";
 
 declare global {

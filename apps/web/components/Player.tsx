@@ -20,7 +20,15 @@ function formatTime(seconds: number): string {
 
 type Phase = "gate" | "idle" | "preroll" | "playing" | "error";
 
-export function Player({ data, embed = false }: { data: PlaybackResponse; embed?: boolean }) {
+export function Player({
+  data,
+  embed = false,
+  onPlaybackStart,
+}: {
+  data: PlaybackResponse;
+  embed?: boolean;
+  onPlaybackStart?: () => void;
+}) {
   const [phase, setPhase] = useState<Phase>(data.policy.ageGate ? "gate" : "idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -194,12 +202,13 @@ export function Player({ data, embed = false }: { data: PlaybackResponse; embed?
   }, [data]);
 
   const finishPreroll = useCallback(() => {
+    onPlaybackStart?.();
     setAd(null);
     setAdSkippable(false);
     firedQuartiles.current.clear();
     setPhase("playing");
     void attachHls().then(() => videoRef.current?.play().catch(() => undefined));
-  }, [attachHls]);
+  }, [attachHls, onPlaybackStart]);
 
   // ---- Start playback (must stay inside the user gesture for the pop-under) ----
   const start = useCallback(() => {
@@ -211,12 +220,13 @@ export function Player({ data, embed = false }: { data: PlaybackResponse; embed?
     void (async () => {
       const hasAd = await startPreroll();
       if (!hasAd) {
+        onPlaybackStart?.();
         setPhase("playing");
         await attachHls();
         videoRef.current?.play().catch(() => undefined);
       }
     })();
-  }, [data, startPreroll, attachHls]);
+  }, [data, startPreroll, attachHls, onPlaybackStart]);
 
   // ---- Ad video wiring ----
   useEffect(() => {

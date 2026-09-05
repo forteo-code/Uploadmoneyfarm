@@ -1,5 +1,5 @@
-import type { AdSlotType } from "@umf/db";
-import { prisma } from "@umf/db";
+import type { AdSlotType } from "@dropreel/db";
+import { prisma } from "@dropreel/db";
 import { redis } from "./redis.js";
 import { getConfig } from "./config.js";
 
@@ -23,6 +23,42 @@ export type AdPlacement = {
 };
 
 export type AdPlan = Record<string, AdPlacement[]>;
+
+/**
+ * How many units of each slot the page should render, and which behavioural
+ * slots are armed.
+ *
+ * Density is operator config rather than a constant because the right number is
+ * an empirical question, not a design one: more units raise gross impressions
+ * but depress fill rate and per-unit CPM (networks price by viewability, and
+ * the twentieth banner below the fold is rarely viewable), while adding page
+ * weight that costs bandwidth on every view. The only way to find the peak is
+ * to move the number and watch revenue per thousand views, so the number is a
+ * knob.
+ */
+export type AdLayout = {
+  bannerCount: number;
+  stickyFooter: boolean;
+  clickAd: boolean;
+  overlay: boolean;
+};
+
+export async function getAdLayout(): Promise<AdLayout> {
+  const [bannerCount, stickyFooter, clickAd, overlay] = await Promise.all([
+    getConfig<number>("ads.bannerCount", 20),
+    getConfig<boolean>("ads.stickyFooterEnabled", true),
+    getConfig<boolean>("ads.clickAdEnabled", true),
+    getConfig<boolean>("ads.overlayEnabled", true),
+  ]);
+  return {
+    // Hard ceiling: beyond this the page stops being usable at all, at which
+    // point the viewer leaves before any impression is registered.
+    bannerCount: Math.max(0, Math.min(bannerCount, 40)),
+    stickyFooter,
+    clickAd,
+    overlay,
+  };
+}
 
 const SLOTS: AdSlotType[] = ["PREROLL", "POPUNDER", "OVERLAY", "BANNER", "INTERSTITIAL"];
 

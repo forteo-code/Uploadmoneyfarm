@@ -13,7 +13,7 @@ import { API_URL } from "@/lib/api";
  * editable only from the admin console, never by uploaders or viewers, which is
  * the boundary that makes it acceptable.
  */
-function injectMarkup(container: HTMLElement, markup: string): void {
+export function injectMarkup(container: HTMLElement, markup: string): void {
   container.innerHTML = "";
   const template = document.createElement("template");
   template.innerHTML = markup;

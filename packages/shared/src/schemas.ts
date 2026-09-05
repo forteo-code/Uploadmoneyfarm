@@ -21,6 +21,8 @@ export const createUploadSchema = z.object({
   mimeType: z.string().max(160).optional(),
   title: z.string().min(1).max(300).optional(),
   contentRating: z.enum(["SFW", "ADULT"]).default("SFW"),
+  // Unlisted by default: an upload is reachable by link, never indexed.
+  visibility: z.enum(["PUBLIC", "UNLISTED", "PRIVATE"]).default("UNLISTED"),
 });
 
 export const completeUploadSchema = z.object({

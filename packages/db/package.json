@@ -1,5 +1,5 @@
 {
-  "name": "@umf/db",
+  "name": "@dropreel/db",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
-    "@umf/shared": "*"
+    "@dropreel/shared": "*"
   },
   "devDependencies": {
     "prisma": "^5.22.0",

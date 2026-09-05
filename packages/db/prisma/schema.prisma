@@ -1,4 +1,4 @@
-// Uploadmoneyfarm - schema
+// Dropreel - schema
 //
 // Design notes that matter:
 //
@@ -212,7 +212,7 @@ model Video {
   tags        String[] @default([])
 
   status        VideoStatus     @default(UPLOADING)
-  visibility    Visibility      @default(PUBLIC)
+  visibility    Visibility      @default(UNLISTED)
   contentRating ContentRating   @default(SFW)
   moderation    ModerationState @default(PENDING)
   blockedReason String?

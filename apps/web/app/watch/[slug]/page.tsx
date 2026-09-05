@@ -11,7 +11,7 @@ export default async function WatchPage({ params }: { params: { slug: string } }
     <>
       <nav className="nav">
         <div className="container nav-inner">
-          <Link href="/" className="brand">upload<span>money</span>farm</Link>
+          <Link href="/" className="brand">drop<span>reel</span></Link>
           <div className="spacer" />
           <Link href="/upload"><button className="btn">Upload</button></Link>
         </div>

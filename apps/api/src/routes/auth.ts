@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { prisma } from "@umf/db";
-import { registerSchema, loginSchema, DEFAULT_REV_SHARE_BPS, DEFAULT_MIN_PAYOUT_MICROS } from "@umf/shared";
+import { prisma } from "@dropreel/db";
+import { registerSchema, loginSchema, DEFAULT_REV_SHARE_BPS, DEFAULT_MIN_PAYOUT_MICROS } from "@dropreel/shared";
 import { asyncHandler, HttpError } from "../middleware/error.js";
 import { requireAuth } from "../middleware/auth.js";
 import { rateLimit } from "../middleware/rateLimit.js";

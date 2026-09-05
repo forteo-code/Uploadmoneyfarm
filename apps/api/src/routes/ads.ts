@@ -60,7 +60,7 @@ adsRouter.get(
 <VAST version="3.0">
   <Ad id="demo-preroll">
     <InLine>
-      <AdSystem>Uploadmoneyfarm Demo</AdSystem>
+      <AdSystem>Dropreel Demo</AdSystem>
       <AdTitle>${DEMO_ADVERTISER}</AdTitle>
       <Impression><![CDATA[${beacon("impression")}]]></Impression>
       <Creatives>

@@ -1,4 +1,4 @@
-import { prisma } from "@umf/db";
+import { prisma } from "@dropreel/db";
 import { redis } from "./redis.js";
 
 /**
