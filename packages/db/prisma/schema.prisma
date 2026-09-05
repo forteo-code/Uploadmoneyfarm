@@ -1,0 +1,733 @@
+// Uploadmoneyfarm - schema
+//
+// Design notes that matter:
+//
+// * Money is BigInt micros everywhere (1 USD = 1_000_000). No Decimal, no Float.
+// * Balances are NEVER stored. They are derived by summing LedgerEntry. The only
+//   way money moves is by inserting a row, which makes every cent auditable and
+//   makes double-payout races structurally impossible.
+// * `View` is the firehose table and will outgrow everything else by orders of
+//   magnitude. Dashboards never read it - they read ViewRollupHourly. See the
+//   indexing notes on each model.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  UPLOADER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  TERMINATED
+}
+
+enum VideoStatus {
+  UPLOADING
+  QUEUED
+  TRANSCODING
+  READY
+  FAILED
+  BLOCKED // hash-list hit or admin block; never served
+  DMCA_REMOVED
+  DELETED
+}
+
+enum Visibility {
+  PUBLIC
+  UNLISTED
+  PRIVATE
+}
+
+enum ContentRating {
+  SFW
+  ADULT
+}
+
+enum ModerationState {
+  PENDING
+  CLEARED
+  QUARANTINED // hash hit; access restricted to compliance role, preserved for reporting
+  REPORTED    // escalated to the relevant authority
+}
+
+enum LedgerEntryType {
+  EARNING
+  REFERRAL
+  ADJUSTMENT
+  CLAWBACK
+  PAYOUT
+  PAYOUT_REVERSAL
+}
+
+enum PayoutStatus {
+  REQUESTED
+  APPROVED
+  PROCESSING
+  PAID
+  REJECTED
+  FAILED
+}
+
+enum PayoutMethod {
+  CRYPTO_USDT_TRC20
+  CRYPTO_BTC
+  PAXUM
+  WIRE
+}
+
+enum DmcaStatus {
+  RECEIVED
+  ACTIONED
+  REJECTED
+  COUNTER_NOTICED
+  REINSTATED
+}
+
+enum StrikeReason {
+  DMCA
+  ILLEGAL_CONTENT
+  FRAUD
+  TOS
+}
+
+enum AdSlotType {
+  PREROLL
+  POPUNDER
+  OVERLAY
+  BANNER
+  INTERSTITIAL
+}
+
+enum AbuseCategory {
+  CSAM
+  NONCONSENSUAL
+  TERRORISM
+  ILLEGAL_OTHER
+  MALWARE
+  SPAM
+}
+
+enum AbuseStatus {
+  OPEN
+  ACTIONED
+  DISMISSED
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  displayName  String?
+  role         UserRole   @default(UPLOADER)
+  status       UserStatus @default(ACTIVE)
+
+  // Payout configuration
+  payoutMethod      PayoutMethod?
+  payoutAddress     String?
+  minPayoutMicros   BigInt        @default(50000000) // $50
+  revShareBps       Int           @default(3500)     // 35%
+
+  // Risk
+  fraudScore    Int       @default(0)
+  strikeCount   Int       @default(0)
+  balanceFrozen Boolean   @default(false)
+  terminatedAt  DateTime?
+  terminationReason String?
+
+  // Signup provenance - IP is stored hashed, never raw
+  signupIpHash String?
+  signupCountry String?
+
+  // Compliance. Populated only when the operator enables adult uploads; these
+  // are the 18 USC 2257-style record-keeping fields.
+  ageVerifiedAt      DateTime?
+  recordKeepingRef   String?
+
+  referralCode String  @unique
+  referredById String?
+  referredBy   User?   @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals    User[]  @relation("Referrals")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  videos          Video[]
+  sessions        Session[]
+  ledgerEntries   LedgerEntry[]
+  payoutRequests  PayoutRequest[]  @relation("PayoutRequester")
+  reviewedPayouts PayoutRequest[]  @relation("PayoutReviewer")
+  strikes         Strike[]
+  counterNotices  CounterNotice[]
+  auditLogs       AuditLog[]
+
+  @@index([status])
+  @@index([referredById])
+  @@index([fraudScore])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  userAgent String?
+  ipHash    String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// Content
+// ---------------------------------------------------------------------------
+
+model Video {
+  id      String @id @default(cuid())
+  slug    String @unique
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  tags        String[] @default([])
+
+  status        VideoStatus     @default(UPLOADING)
+  visibility    Visibility      @default(PUBLIC)
+  contentRating ContentRating   @default(SFW)
+  moderation    ModerationState @default(PENDING)
+  blockedReason String?
+
+  // Source object
+  sourceKey   String?
+  sourceBytes BigInt  @default(0)
+  sourceMime  String?
+
+  // Probed metadata
+  durationSec Float?
+  width       Int?
+  height      Int?
+  fps         Float?
+  videoCodec  String?
+  audioCodec  String?
+
+  // Fingerprints. sha256 catches exact re-uploads; phash catches re-encodes and
+  // is what the blocked-hash check runs against.
+  sha256 String?
+  phash  String?
+
+  // Derived objects
+  hlsMasterKey String?
+  posterKey    String?
+  spriteKey    String?
+  spriteVttKey String?
+  storageBytes BigInt  @default(0)
+
+  // Denormalised counters. Authoritative numbers live in ViewRollupHourly;
+  // these exist so listing pages do not aggregate on every request.
+  viewCount          BigInt @default(0)
+  countableViewCount BigInt @default(0)
+  earnedMicros       BigInt @default(0)
+
+  transcodeAttempts Int     @default(0)
+  transcodeError    String?
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  readyAt      DateTime?
+  lastViewedAt DateTime?
+  deletedAt    DateTime?
+
+  variants     VideoVariant[]
+  views        View[]
+  rollups      ViewRollupHourly[]
+  impressions  AdImpression[]
+  strikes      Strike[]
+  abuseReports AbuseReport[]
+  ledgerEntries LedgerEntry[]
+  playbackSessions PlaybackSession[]
+  dmcaTargets  DmcaTarget[]
+
+  // Listing pages filter on (status, visibility) and sort by recency.
+  @@index([ownerId, createdAt])
+  @@index([status, visibility, createdAt])
+  @@index([sha256])
+  @@index([phash])
+  // Storage pruning sweeps for READY videos nobody has watched in N days.
+  @@index([lastViewedAt])
+  @@index([moderation])
+}
+
+model VideoVariant {
+  id          String  @id @default(cuid())
+  videoId     String
+  video       Video   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  height      Int
+  bitrateKbps Int
+  playlistKey String
+  bytes       BigInt  @default(0)
+  codec       String  @default("h264")
+  createdAt   DateTime @default(now())
+
+  @@unique([videoId, height])
+  @@index([videoId])
+}
+
+// ---------------------------------------------------------------------------
+// Playback + view tracking
+// ---------------------------------------------------------------------------
+
+///
+/// One row per player load. The signed token handed to the player is bound to
+/// this row, which is what makes the tracking endpoint non-replayable: a view
+/// can only be counted once per session, and a session is issued server-side
+/// with its own IP/UA fingerprint.
+///
+model PlaybackSession {
+  id        String   @id @default(cuid())
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+
+  ipHash      String
+  uaHash      String
+  country     String?
+  asn         Int?
+  isDatacenter Boolean @default(false)
+  isBot        Boolean @default(false)
+  referrerDomain String?
+  embedDomain    String?
+
+  cpmTier         Int  @default(3)
+  servedMaxHeight Int  @default(480)
+
+  // Heartbeat state. Plausibility is judged from these.
+  heartbeatCount   Int      @default(0)
+  watchedSeconds   Float    @default(0)
+  lastPosition     Float    @default(0)
+  lastHeartbeatAt  DateTime?
+  firstHeartbeatAt DateTime?
+
+  countedAt DateTime?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  view        View?
+  impressions AdImpression[]
+
+  @@index([videoId, createdAt])
+  @@index([expiresAt])
+}
+
+///
+/// The firehose. Every playback session that reaches the countability check
+/// writes exactly one row here - countable or not. Non-countable rows are kept
+/// deliberately: they are the evidence trail for uploader payout disputes and
+/// the training data for tuning the fraud rules.
+///
+/// Indexing plan:
+/// - (videoId, createdAt) serves per-video recent-activity queries.
+/// - (uploaderId, createdAt) serves the rollup job and fraud sweeps.
+/// - visitorHash is indexed for retrospective abuse investigation only; the
+/// hot dedupe path is Redis, not this index.
+///
+/// Partitioning: this table should be declared as a native Postgres partitioned
+/// table by RANGE (createdAt) with monthly partitions once volume warrants it -
+/// Prisma does not model partitioning, so it is applied in a follow-up migration
+/// and old partitions are DETACHed and dropped rather than DELETEd. Raw rows are
+/// retained 90 days; ViewRollupHourly is retained forever and is what the
+/// dashboards, payouts and disputes actually read.
+///
+model View {
+  id      BigInt @id @default(autoincrement())
+  videoId String
+  video   Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  // Denormalised so rollups and fraud sweeps never join through Video.
+  uploaderId String
+
+  playbackSessionId String? @unique
+  playbackSession   PlaybackSession? @relation(fields: [playbackSessionId], references: [id], onDelete: SetNull)
+
+  visitorHash String  // hash(ip + ua + videoId + dayBucket)
+  ipHash      String
+  country     String?
+  asn         Int?
+  isDatacenter Boolean @default(false)
+  isBot        Boolean @default(false)
+  userAgentFamily String?
+  referrerDomain  String?
+  embedDomain     String?
+
+  watchedSeconds Float @default(0)
+  heartbeats     Int   @default(0)
+
+  isCountable  Boolean  @default(false)
+  fraudReasons String[] @default([])
+  cpmTier      Int      @default(3)
+  earnedMicros BigInt   @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([videoId, createdAt])
+  @@index([uploaderId, createdAt])
+  @@index([visitorHash])
+  @@index([createdAt])
+  @@index([isCountable, createdAt])
+}
+
+///
+/// Hourly aggregate, keyed by (video, hour, country). This is the read model for
+/// every dashboard and every payout calculation. Written by a rollup job that
+/// folds raw View rows forward; idempotent on the unique key so a re-run cannot
+/// double-count.
+///
+model ViewRollupHourly {
+  id         BigInt   @id @default(autoincrement())
+  videoId    String
+  video      Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  uploaderId String
+  hourStart  DateTime
+  country    String   @default("XX")
+  cpmTier    Int      @default(3)
+
+  views          BigInt @default(0)
+  countableViews BigInt @default(0)
+  watchedSeconds BigInt @default(0)
+  adImpressions  BigInt @default(0)
+  grossMicros    BigInt @default(0)
+  uploaderMicros BigInt @default(0)
+
+  @@unique([videoId, hourStart, country])
+  @@index([uploaderId, hourStart])
+  @@index([hourStart])
+}
+
+// ---------------------------------------------------------------------------
+// Advertising
+// ---------------------------------------------------------------------------
+
+///
+/// Ad networks are data, not code. The player asks the server which network
+/// fills a given slot for a given country; the server runs a weighted waterfall
+/// over the enabled rows. Swapping a network that has banned us, or reordering
+/// by observed revenue, is a row update - never a deploy.
+///
+model AdNetwork {
+  id       String     @id @default(cuid())
+  key      String     @unique // stable identifier used by the player
+  name     String
+  slotType AdSlotType
+  enabled  Boolean    @default(true)
+
+  // Higher priority is tried first; weight breaks ties within a priority for
+  // A/B splitting. On no-fill the player falls through to the next row.
+  priority Int @default(100)
+  weight   Int @default(100)
+
+  // The network's tag, with {{PLACEHOLDERS}} substituted server-side. Kept as
+  // a template so a network swap never touches the player bundle.
+  scriptTemplate String?
+  vastTemplate   String?
+
+  geoAllow String[] @default([])
+  geoDeny  String[] @default([])
+
+  frequencyCapPerHour Int    @default(1)
+  estCpmMicros        BigInt @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  impressions AdImpression[]
+
+  @@index([slotType, enabled, priority])
+}
+
+model AdImpression {
+  id                String     @id @default(cuid())
+  playbackSessionId String
+  playbackSession   PlaybackSession @relation(fields: [playbackSessionId], references: [id], onDelete: Cascade)
+  videoId           String
+  video             Video      @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  uploaderId        String
+  networkId         String
+  network           AdNetwork  @relation(fields: [networkId], references: [id], onDelete: Restrict)
+  slotType          AdSlotType
+
+  country          String?
+  cpmTier          Int    @default(3)
+  filled           Boolean @default(true)
+  estRevenueMicros BigInt  @default(0)
+
+  createdAt DateTime @default(now())
+
+  // Powers the "which network actually pays best, per geo" admin report.
+  @@index([networkId, createdAt])
+  @@index([videoId, createdAt])
+  @@index([uploaderId, createdAt])
+  @@index([country, networkId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Money
+// ---------------------------------------------------------------------------
+
+///
+/// Append-only. Nothing in the codebase updates or deletes a row here; a mistake
+/// is corrected by writing a compensating ADJUSTMENT or CLAWBACK entry.
+///
+/// availableAt implements the hold period: an EARNING is part of the pending
+/// balance until that timestamp passes, after which it becomes withdrawable.
+/// The hold exists so fraud discovered days later can still be clawed back
+/// before the money physically leaves.
+///
+model LedgerEntry {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        LedgerEntryType
+  amountMicros BigInt         // signed: credits positive, debits negative
+  currency    String          @default("USD")
+
+  videoId String?
+  video   Video?  @relation(fields: [videoId], references: [id], onDelete: SetNull)
+
+  // Idempotency handle. For rollup-derived earnings this is
+  // "rollup:<videoId>:<hourStart>", which makes replaying the earnings job safe.
+  refType String?
+  refKey  String?
+
+  description String?
+  availableAt DateTime?
+  createdAt   DateTime @default(now())
+
+  reversesId String?      @unique
+  reverses   LedgerEntry? @relation("Reversal", fields: [reversesId], references: [id])
+  reversedBy LedgerEntry? @relation("Reversal")
+
+  payoutRequestId String?
+  payoutRequest   PayoutRequest? @relation(fields: [payoutRequestId], references: [id], onDelete: SetNull)
+
+  @@unique([refType, refKey])
+  @@index([userId, createdAt])
+  @@index([userId, availableAt])
+  @@index([type, createdAt])
+}
+
+model PayoutRequest {
+  id     String       @id @default(cuid())
+  userId String
+  user   User         @relation("PayoutRequester", fields: [userId], references: [id], onDelete: Cascade)
+  amountMicros BigInt
+  method PayoutMethod
+  address String
+  status PayoutStatus @default(REQUESTED)
+
+  reviewerId String?
+  reviewer   User?   @relation("PayoutReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewNotes String?
+  providerRef String?
+  failureReason String?
+
+  // Snapshot of the requester's risk at request time, so an approver sees what
+  // the system thought without re-deriving it.
+  fraudScoreAtRequest Int @default(0)
+
+  requestedAt DateTime  @default(now())
+  decidedAt   DateTime?
+  paidAt      DateTime?
+
+  ledgerEntries LedgerEntry[]
+
+  @@index([status, requestedAt])
+  @@index([userId, requestedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Compliance
+// ---------------------------------------------------------------------------
+
+model DmcaNotice {
+  id             String     @id @default(cuid())
+  claimantName   String
+  claimantEmail  String
+  claimantOrg    String?
+  claimantAddress String
+  claimantPhone  String?
+  workDescription String
+  signature      String
+  goodFaithStatement Boolean @default(false)
+  accuracyStatement  Boolean @default(false)
+
+  status     DmcaStatus @default(RECEIVED)
+  receivedAt DateTime   @default(now())
+  dueAt      DateTime   // receivedAt + SLA; drives the countdown in admin
+  actionedAt DateTime?
+  actionedById String?
+  rejectionReason String?
+
+  sourceIpHash String?
+  rawSubmission Json?
+
+  targets        DmcaTarget[]
+  counterNotices CounterNotice[]
+  strikes        Strike[]
+
+  @@index([status, dueAt])
+  @@index([receivedAt])
+}
+
+model DmcaTarget {
+  id       String @id @default(cuid())
+  noticeId String
+  notice   DmcaNotice @relation(fields: [noticeId], references: [id], onDelete: Cascade)
+  url      String
+  videoId  String?
+  video    Video?  @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  resolved Boolean @default(false)
+
+  @@index([noticeId])
+  @@index([videoId])
+}
+
+model CounterNotice {
+  id       String @id @default(cuid())
+  noticeId String
+  notice   DmcaNotice @relation(fields: [noticeId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  statement String
+  signature String
+  address   String
+  consentToJurisdiction Boolean @default(false)
+  submittedAt DateTime @default(now())
+  // Reinstatement is not automatic: the statutory waiting period must elapse
+  // and the operator must confirm no action was filed.
+  reinstatedAt DateTime?
+
+  @@index([noticeId])
+  @@index([userId])
+}
+
+///
+/// Strikes are what make the repeat-infringer policy real. Safe harbour is
+/// conditional on actually terminating repeat infringers, so this table is
+/// load-bearing legally, not just operationally.
+///
+model Strike {
+  id       String       @id @default(cuid())
+  userId   String
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reason   StrikeReason
+  videoId  String?
+  video    Video?       @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  noticeId String?
+  notice   DmcaNotice?  @relation(fields: [noticeId], references: [id], onDelete: SetNull)
+  note      String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  voidedAt  DateTime?
+
+  @@index([userId, expiresAt])
+}
+
+model AbuseReport {
+  id       String        @id @default(cuid())
+  videoId  String
+  video    Video         @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  category AbuseCategory
+  details  String?
+  reporterEmail String?
+  reporterIpHash String?
+  status   AbuseStatus   @default(OPEN)
+  createdAt DateTime     @default(now())
+  resolvedAt DateTime?
+  resolvedById String?
+  resolution String?
+
+  // CSAM reports jump the queue; the index supports that ordering.
+  @@index([status, category, createdAt])
+  @@index([videoId])
+}
+
+///
+/// Known-bad perceptual hashes checked at ingest. In production this is
+/// populated from a hash-matching provider; matches block the upload before it
+/// is ever playable and open a quarantine record.
+///
+model BlockedHash {
+  id       String @id @default(cuid())
+  algo     String @default("phash")
+  hash     String
+  source   String @default("INTERNAL")
+  severity String @default("BLOCK")
+  note     String?
+  addedAt  DateTime @default(now())
+
+  @@unique([algo, hash])
+  @@index([algo])
+}
+
+model AuditLog {
+  id       String  @id @default(cuid())
+  actorId  String?
+  actor    User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorType String @default("USER") // USER | SYSTEM | JOB
+  action   String
+  targetType String?
+  targetId   String?
+  metadata Json?
+  ipHash   String?
+  createdAt DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId])
+  @@index([action, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Configuration
+// ---------------------------------------------------------------------------
+
+///
+/// Per-country revenue and, critically, the per-country quality ceiling. Serving
+/// 720p to traffic that pays $0.35 RPM burns more in bandwidth than the ads
+/// return, so maxHeight is tuned against rpmMicros. 1080p is off everywhere by
+/// default.
+///
+model CountryConfig {
+  code       String  @id // ISO 3166-1 alpha-2, or "XX" for unknown
+  tier       Int     @default(3)
+  rpmMicros  BigInt  @default(350000)
+  maxHeight  Int     @default(480)
+  enabled    Boolean @default(true)
+  blocked    Boolean @default(false) // geo-block, e.g. age-verification regimes
+  updatedAt  DateTime @updatedAt
+
+  @@index([tier])
+}
+
+model SystemConfig {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}

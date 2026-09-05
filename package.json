@@ -1,0 +1,25 @@
+{
+  "name": "uploadmoneyfarm",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["packages/*", "apps/*"],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "db:generate": "npm run generate -w @umf/db",
+    "db:migrate": "npm run migrate -w @umf/db",
+    "db:push": "npm run push -w @umf/db",
+    "db:seed": "npm run seed -w @umf/db",
+    "dev:api": "npm run dev -w @umf/api",
+    "dev:worker": "npm run dev -w @umf/worker",
+    "dev:web": "npm run dev -w @umf/web"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "tsx": "^4.19.2",
+    "@types/node": "^22.9.0",
+    "vitest": "^2.1.5"
+  }
+}
