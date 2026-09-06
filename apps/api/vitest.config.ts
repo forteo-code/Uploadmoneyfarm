@@ -6,5 +6,8 @@ export default defineConfig({
     fileParallelism: false,
     testTimeout: 30_000,
     include: ["src/**/*.test.ts"],
+    // Runs before the test module is imported, which is what makes the
+    // import-time environment validation in src/env.ts survivable.
+    setupFiles: ["./src/test-setup.ts"],
   },
 });

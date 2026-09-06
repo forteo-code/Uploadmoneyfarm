@@ -11,3 +11,6 @@ coverage/
 /tmp-media/
 packages/db/generated/
 tmp-media/
+
+# TypeScript incremental build state
+*.tsbuildinfo

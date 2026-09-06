@@ -4,6 +4,7 @@ import { prisma } from "@dropreel/db";
 import { issueStrike, clawback } from "./moderation.js";
 import { getBalances } from "./earnings.js";
 import { REPEAT_INFRINGER_STRIKE_LIMIT, STRIKE_EXPIRY_DAYS } from "@dropreel/shared";
+import { hasDatabase } from "../test-db.js";
 
 /**
  * The repeat-infringer machine.
@@ -41,13 +42,14 @@ async function makeVideo(ownerId: string) {
 }
 
 afterAll(async () => {
+  if (!hasDatabase) return;
   if (createdUserIds.length > 0) {
     await prisma.user.deleteMany({ where: { id: { in: createdUserIds } } });
   }
   await prisma.$disconnect();
 });
 
-describe("repeat infringer policy", () => {
+describe.skipIf(!hasDatabase)("repeat infringer policy", () => {
   it("records a strike without terminating on the first offence", async () => {
     const userId = await makeUser();
     const result = await issueStrike({ userId, reason: "DMCA", note: "first" });
@@ -136,7 +138,7 @@ describe("repeat infringer policy", () => {
   });
 });
 
-describe("clawback", () => {
+describe.skipIf(!hasDatabase)("clawback", () => {
   it("reverses earnings with a compensating entry, leaving the original intact", async () => {
     const userId = await makeUser();
     await prisma.ledgerEntry.create({

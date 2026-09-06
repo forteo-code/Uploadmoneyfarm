@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
-import { API_URL } from "@/lib/api";
+import { apiBase } from "@/lib/api";
 
 type Rates = {
   revSharePercent: number;
@@ -12,7 +12,7 @@ type Rates = {
 
 async function getRates(): Promise<Rates | null> {
   try {
-    const res = await fetch(`${API_URL}/api/public/rates`, { next: { revalidate: 300 } });
+    const res = await fetch(`${apiBase()}/api/public/rates`, { next: { revalidate: 300 } });
     return res.ok ? res.json() : null;
   } catch {
     return null;

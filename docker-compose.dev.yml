@@ -1,0 +1,22 @@
+# Local development override.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml \
+#     --profile local-storage up -d
+#
+# Publishes the datastore ports so the scripts in scripts/ — the smoke tests,
+# the ad seeder, the demo account — can talk to Postgres and Redis from the
+# host. Production does not publish them: the only things that need the
+# database are on the compose network already, and an exposed 5432 is how a
+# database ends up in someone else's dataset.
+#
+# Presigned upload URLs are generated against S3_ENDPOINT, which inside the
+# network is http://minio:9000. For a host-side script to follow one, map the
+# name locally:
+#
+#   echo "127.0.0.1 minio" | sudo tee -a /etc/hosts
+
+services:
+  postgres:
+    ports: ["5432:5432"]
+  redis:
+    ports: ["6379:6379"]

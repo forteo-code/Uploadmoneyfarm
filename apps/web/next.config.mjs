@@ -1,6 +1,14 @@
+import path from "node:path";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Emits a self-contained server bundle with only the modules actually
+  // imported, so the production image does not carry the whole workspace
+  // node_modules. Without this the web image is an order of magnitude larger
+  // than the code it runs.
+  output: "standalone",
+  outputFileTracingRoot: path.join(process.cwd(), "../../"),
   async headers() {
     return [
       {

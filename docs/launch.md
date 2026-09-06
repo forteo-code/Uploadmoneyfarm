@@ -38,11 +38,45 @@ get a suspension at exactly the moment it started working.
 ```bash
 git clone <your fork> && cd dropreel
 cp .env.example .env          # fill in secrets: openssl rand -hex 32
-docker compose up -d postgres redis
-npm install
-npm run db:migrate && npm run db:seed
-npm run build
+
+# Everything, in containers: Postgres, Redis, migrations, API, worker, web.
+docker compose up -d --build
+
+# Encoding is the only thing worth scaling. Add capacity when the queue backs up:
+docker compose up -d --scale worker=4
 ```
+
+That is the whole deploy. `migrate` runs to completion before `api` and `worker`
+start, and re-applying an existing migration is a no-op, so it is safe on every
+boot.
+
+To run it locally with MinIO standing in for R2, add the storage profile and the
+dev override, which publishes the datastore ports for the scripts in `scripts/`:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml \
+  --profile local-storage up -d --build
+echo "127.0.0.1 minio" | sudo tee -a /etc/hosts   # presigned URLs name the service
+
+node scripts/e2e-upload.mjs some-video.mp4        # upload -> encode -> READY
+node scripts/hls-check.mjs <slug>                 # delivery and the geo cap
+node scripts/seed-demo-ads.mjs                    # see the real ad density
+```
+
+If your build machine sits behind a TLS-intercepting proxy, npm, Prisma's engine
+download and apt will all fail with a self-signed-certificate error. Supply the
+CA to the build only:
+
+```bash
+CA_CERT_FILE=/path/to/ca-bundle.crt \
+  docker compose -f docker-compose.yml -f docker-compose.ca.yml build
+```
+
+**Two URLs, not one.** `API_PUBLIC_URL` is baked into the browser bundle at build
+time and must be reachable from the public internet. `API_INTERNAL_URL` is read at
+run time and is how the web container reaches the API on the internal network
+(`http://api:4000`). They are different addresses and setting only one is the
+first thing that breaks behind a reverse proxy.
 
 Point the domain at the box, terminate TLS at Cloudflare, and set
 `MEDIA_PUBLIC_BASE_URL` to your R2 custom domain.

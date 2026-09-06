@@ -1,10 +1,10 @@
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
-import { API_URL } from "@/lib/api";
+import { apiBase } from "@/lib/api";
 
 async function getSite() {
   try {
-    const res = await fetch(`${API_URL}/api/public/site`, { next: { revalidate: 600 } });
+    const res = await fetch(`${apiBase()}/api/public/site`, { next: { revalidate: 600 } });
     return res.ok ? res.json() : null;
   } catch { return null; }
 }

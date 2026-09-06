@@ -1,0 +1,27 @@
+# Override for build machines behind a TLS-intercepting proxy.
+#
+# Corporate egress and some CI sandboxes re-terminate TLS, which makes npm,
+# Prisma's engine download and apk all fail with a self-signed-certificate
+# error. This supplies the proxy's CA to the build only; it never lands in a
+# published layer, and the CA is not used at run time.
+#
+#   CA_CERT_FILE=/path/to/ca-bundle.crt \
+#     docker compose -f docker-compose.yml -f docker-compose.ca.yml build
+
+secrets:
+  ca_cert:
+    file: ${CA_CERT_FILE:?set CA_CERT_FILE to the proxy CA bundle}
+
+services:
+  migrate:
+    build:
+      secrets: [ca_cert]
+  api:
+    build:
+      secrets: [ca_cert]
+  worker:
+    build:
+      secrets: [ca_cert]
+  web:
+    build:
+      secrets: [ca_cert]
