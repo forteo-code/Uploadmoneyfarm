@@ -68,7 +68,7 @@ async function select(id) {
 
   el.title.textContent = sample.leverancier;
   el.sub.textContent = sample.waarom;
-  el.viewer.innerHTML = `<iframe src="/api/samples/${encodeURIComponent(id)}.pdf#toolbar=0&navpanes=0&view=FitH" title="Factuur"></iframe>`;
+  el.viewer.innerHTML = `<iframe src="/api/samples/${encodeURIComponent(id)}.pdf#toolbar=0&navpanes=0&view=Fit" title="Factuur"></iframe>`;
   el.result.innerHTML = `<div class="spinner">Document lezen en controleren…</div>`;
 
   try {
