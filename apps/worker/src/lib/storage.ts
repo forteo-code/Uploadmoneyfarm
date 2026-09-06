@@ -1,4 +1,7 @@
-import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand,
+  DeleteObjectsCommand, ListObjectsV2Command,
+} from "@aws-sdk/client-s3";
 import { createWriteStream } from "node:fs";
 import { pipeline } from "node:stream/promises";
 import type { Readable } from "node:stream";
@@ -59,4 +62,26 @@ export async function uploadFile(localPath: string, key: string): Promise<number
 
 export async function deleteObject(key: string): Promise<void> {
   await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
+}
+
+/**
+ * Removes every object under a prefix. Used by storage pruning and takedowns.
+ * Pages through the listing because a long video's segment count can exceed the
+ * 1000-key limit of a single response.
+ */
+export async function deletePrefix(prefix: string): Promise<number> {
+  let deleted = 0;
+  let token: string | undefined;
+  do {
+    const listed = await s3.send(
+      new ListObjectsV2Command({ Bucket: BUCKET, Prefix: prefix, ContinuationToken: token }),
+    );
+    const keys = (listed.Contents ?? []).map((o) => ({ Key: o.Key! })).filter((o) => o.Key);
+    if (keys.length > 0) {
+      await s3.send(new DeleteObjectsCommand({ Bucket: BUCKET, Delete: { Objects: keys } }));
+      deleted += keys.length;
+    }
+    token = listed.IsTruncated ? listed.NextContinuationToken : undefined;
+  } while (token);
+  return deleted;
 }

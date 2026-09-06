@@ -3,6 +3,7 @@ import { Redis } from "ioredis";
 import { env } from "./env.js";
 import { logger } from "./lib/logger.js";
 import { runTranscode, markFailed, type TranscodeJob } from "./transcode.js";
+import { startMaintenanceLoop } from "./maintenance.js";
 
 const connection = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
 
@@ -43,11 +44,14 @@ worker.on("error", (err) => logger.error({ err }, "worker error"));
 
 async function shutdown(signal: string) {
   logger.info({ signal }, "shutting down; finishing in-flight jobs");
+  clearInterval(maintenanceTimer);
   await worker.close();
   await connection.quit();
   process.exit(0);
 }
 process.on("SIGTERM", () => void shutdown("SIGTERM"));
 process.on("SIGINT", () => void shutdown("SIGINT"));
+
+const maintenanceTimer = startMaintenanceLoop();
 
 logger.info({ concurrency: env.TRANSCODE_CONCURRENCY }, "transcode worker ready");

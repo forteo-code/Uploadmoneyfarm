@@ -221,6 +221,8 @@ async function main() {
     ["payout.revShareBps", DEFAULT_REV_SHARE_BPS],
     ["quality.allow1080p", false],
     ["storage.pruneUnwatchedAfterDays", 90],
+    // Raw views age out; the hourly rollups are the permanent record.
+    ["retention.rawViewDays", 90],
   ];
   for (const [key, value] of config) {
     await prisma.systemConfig.upsert({

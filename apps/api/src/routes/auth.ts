@@ -12,6 +12,7 @@ import { clientIp, userAgent } from "../lib/request.js";
 import { hashIp, randomToken } from "../lib/crypto.js";
 import { lookupCountry } from "../lib/geoip.js";
 import { isProd } from "../env.js";
+import { getConfig } from "../lib/config.js";
 
 export const authRouter = Router();
 
@@ -59,8 +60,12 @@ authRouter.post(
         referredById,
         signupIpHash: hashIp(ip),
         signupCountry: lookupCountry(ip),
-        revShareBps: DEFAULT_REV_SHARE_BPS,
-        minPayoutMicros: DEFAULT_MIN_PAYOUT_MICROS,
+        // Seeded from operator config. The value is then stored per-user, so a
+        // later config change does not silently alter terms an existing
+        // uploader already earned under - what they were promised is on their
+        // row, and an admin can raise an individual rate deliberately.
+        revShareBps: await getConfig<number>("payout.revShareBps", DEFAULT_REV_SHARE_BPS),
+        minPayoutMicros: BigInt(await getConfig<string>("payout.minMicros", DEFAULT_MIN_PAYOUT_MICROS.toString())),
       },
       select: { id: true, email: true, role: true, displayName: true, referralCode: true },
     });

@@ -64,7 +64,10 @@ playbackRouter.post(
     const countryConfig = country
       ? await prisma.countryConfig.findUnique({ where: { code: country } })
       : null;
-    if (countryConfig?.blocked) throw new HttpError(451, "unavailable_in_region");
+    const blockedList = await getConfig<string[]>("content.blockedCountries", []);
+    if (countryConfig?.blocked || (country && blockedList.includes(country))) {
+      throw new HttpError(451, "unavailable_in_region");
+    }
 
     const cpmTier = countryConfig?.tier ?? tierForCountry(country);
     const requestedCap = countryConfig?.maxHeight ?? 480;

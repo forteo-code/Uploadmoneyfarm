@@ -16,6 +16,7 @@ import { adsRouter } from "./routes/ads.js";
 import { meRouter } from "./routes/me.js";
 import { dmcaRouter } from "./routes/dmca.js";
 import { adminRouter } from "./routes/admin.js";
+import { publicRouter } from "./routes/public.js";
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use("/api/ads", adsRouter);
 app.use("/api/me", meRouter);
 app.use("/api/dmca", dmcaRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/public", publicRouter);
 
 app.use(notFound);
 app.use(errorHandler);

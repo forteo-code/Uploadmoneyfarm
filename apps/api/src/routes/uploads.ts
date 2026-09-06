@@ -9,6 +9,7 @@ import { startMultipart, presignPart, completeMultipart, abortMultipart, sourceK
 import { transcodeQueue } from "../lib/queue.js";
 import { randomToken } from "../lib/crypto.js";
 import { logger } from "../lib/logger.js";
+import { getConfig } from "../lib/config.js";
 
 export const uploadsRouter = Router();
 
@@ -47,6 +48,11 @@ uploadsRouter.post(
     const input = createUploadSchema.parse(req.body);
     const ext = path.extname(input.filename).toLowerCase();
     if (!ALLOWED_EXT.has(ext)) throw new HttpError(415, "unsupported_file_type");
+
+    // Operator policy, enforced at ingest rather than only hidden in the UI.
+    if (input.contentRating === "ADULT" && !(await getConfig<boolean>("content.allowAdult", true))) {
+      throw new HttpError(403, "adult_content_disabled");
+    }
 
     const userId = req.userId!;
 

@@ -138,6 +138,9 @@ export async function buildAdPlan(opts: {
 
   const prerollEnabled = await getConfig<boolean>("ads.prerollEnabled", true);
   const popCap = await getConfig<number>("ads.maxPopundersPerVisitorPerHour", 1);
+  // The client also remembers this, but localStorage is trivially cleared, so
+  // the authoritative cap has to live here.
+  const clickCap = await getConfig<number>("ads.maxClickAdsPerVisitorPerHour", 1);
 
   const country = (opts.country ?? "").toUpperCase();
 
@@ -180,7 +183,10 @@ export async function buildAdPlan(opts: {
     const placements: AdPlacement[] = [];
 
     for (const n of ordered) {
-      const cap = slot === "POPUNDER" ? Math.min(n.frequencyCapPerHour, popCap) : n.frequencyCapPerHour;
+      const cap =
+        slot === "POPUNDER" ? Math.min(n.frequencyCapPerHour, popCap)
+        : slot === "INTERSTITIAL" ? Math.min(n.frequencyCapPerHour, clickCap)
+        : n.frequencyCapPerHour;
       if (await isCapped(opts.visitorHash, n.key, cap)) continue;
 
       const vars = { COUNTRY: country || "XX", VIDEO_ID: opts.videoId, SLOT: slot };
