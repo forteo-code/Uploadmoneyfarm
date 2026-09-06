@@ -1,0 +1,80 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /FR 3 0 R /FB 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2900 >>
+stream
+0.13 g 0 753.89 595.28 88 re f 0 g
+BT 1 g /FB 20 Tf 1 0 0 1 48 799.89 Tm (Thornbury Analytics Ltd) Tj ET 0 g
+BT 0.85 g /FR 8 Tf 1 0 0 1 48 779.89 Tm (48 Bridge Road  \267  BS1 4TR Bristol) Tj ET 0 g
+BT 0.85 g /FR 8 Tf 1 0 0 1 48 767.89 Tm (billing@thornburyanalytics.example) Tj ET 0 g
+BT 1 g /FB 16 Tf 1 0 0 1 481.49 791.89 Tm (INVOICE) Tj ET 0 g
+BT 0.45 g /FB 7.5 Tf 1 0 0 1 48 713.89 Tm (Factuuradres) Tj ET 0 g
+BT 0 g /FR 9.5 Tf 1 0 0 1 48 699.89 Tm (De Boer & Vermeulen Advies B.V.) Tj ET 0 g
+BT 0 g /FR 9.5 Tf 1 0 0 1 48 686.89 Tm (Weteringschans 87) Tj ET 0 g
+BT 0 g /FR 9.5 Tf 1 0 0 1 48 673.89 Tm (1017 RZ Amsterdam) Tj ET 0 g
+BT 0.4 g /FR 8.5 Tf 1 0 0 1 48 660.89 Tm (Btw-nr. NL817254092B01) Tj ET 0 g
+BT 0.45 g /FR 8.5 Tf 1 0 0 1 340 707.89 Tm (Factuurnummer) Tj ET 0 g
+BT 0 g /FB 8.5 Tf 1 0 0 1 514.21 707.89 Tm (TA-9931) Tj ET 0 g
+BT 0.45 g /FR 8.5 Tf 1 0 0 1 340 694.89 Tm (Factuurdatum) Tj ET 0 g
+BT 0 g /FR 8.5 Tf 1 0 0 1 503.81 694.89 Tm (2026-03-05) Tj ET 0 g
+BT 0.45 g /FR 8.5 Tf 1 0 0 1 340 681.89 Tm (Vervaldatum) Tj ET 0 g
+BT 0 g /FR 8.5 Tf 1 0 0 1 503.81 681.89 Tm (2026-04-04) Tj ET 0 g
+BT 0.45 g /FR 8.5 Tf 1 0 0 1 340 668.89 Tm (Betaling) Tj ET 0 g
+BT 0 g /FR 8.5 Tf 1 0 0 1 522.24 668.89 Tm (Net 30) Tj ET 0 g
+0.94 g 48 615.89 499.28 20 re f 0 g
+BT 0.3 g /FB 8 Tf 1 0 0 1 52 621.89 Tm (Omschrijving) Tj ET 0 g
+BT 0.3 g /FB 8 Tf 1 0 0 1 345.55 621.89 Tm (Aantal) Tj ET 0 g
+BT 0.3 g /FB 8 Tf 1 0 0 1 434.66 621.89 Tm (Prijs) Tj ET 0 g
+BT 0.3 g /FB 8 Tf 1 0 0 1 477.34 621.89 Tm (Btw) Tj ET 0 g
+BT 0.3 g /FB 8 Tf 1 0 0 1 515.72 621.89 Tm (Bedrag) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 52 599.89 Tm (Annual licence - Analytics Platform, 25 seats) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 350.49 599.89 Tm (25 st) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 402.97 599.89 Tm (GBP 180,00) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 479 599.89 Tm (0%) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 486.74 599.89 Tm (GBP 4.500,00) Tj ET 0 g
+0.9 G 0.5 w 48 588.89 m 547.28 588.89 l S 0 G
+BT 0 g /FR 9 Tf 1 0 0 1 52 582.89 Tm (Onboarding and configuration) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 365 582.89 Tm (1) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 402.97 582.89 Tm (GBP 950,00) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 479 582.89 Tm (0%) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 494.25 582.89 Tm (GBP 950,00) Tj ET 0 g
+0.9 G 0.5 w 48 571.89 m 547.28 571.89 l S 0 G
+BT 0.35 g /FR 9 Tf 1 0 0 1 350 553.89 Tm (Subtotaal excl. btw) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 490.74 553.89 Tm (GBP 5.450,00) Tj ET 0 g
+0.4 G 0.5 w 350 543.89 m 547.28 543.89 l S 0 G
+BT 0 g /FB 10.5 Tf 1 0 0 1 350 532.89 Tm (Totaal te betalen) Tj ET 0 g
+BT 0 g /FB 10.5 Tf 1 0 0 1 480.74 532.89 Tm (GBP 5.450,00) Tj ET 0 g
+BT 0.2 g /FR 8.5 Tf 1 0 0 1 48 141.89 Tm (VAT reverse charge - customer to account for VAT.) Tj ET 0 g
+0.85 G 0.5 w 48 79.89 m 547.28 79.89 l S 0 G
+BT 0.4 g /FR 7.5 Tf 1 0 0 1 48 65.89 Tm (IBAN GB29NWBK60161331926819   |   Btw-nr. GB428193756) Tj ET 0 g
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000121 00000 n 
+0000000218 00000 n 
+0000000320 00000 n 
+0000000462 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+3414
+%%EOF

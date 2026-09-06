@@ -1,0 +1,138 @@
+[
+  {
+    "id": "01-hosting",
+    "bestandsnaam": "01-hosting-nordwijk.pdf",
+    "factuurnummer": "2026-0417",
+    "factuurdatum": "2026-03-31",
+    "leverancier": "Nordwijk Cloud Services B.V.",
+    "totaalIncl": 195899,
+    "subtotaal": 161900,
+    "totaalBtw": 33999,
+    "regels": 4,
+    "verwachteBeslissing": "auto_post",
+    "verwachteCodes": [],
+    "waaromInteressant": "Schone factuur, één tarief, fractioneel aantal (3,5 uur). Dit is de basislijn: hier moet niets op aan te merken zijn."
+  },
+  {
+    "id": "02-catering",
+    "bestandsnaam": "02-catering-vandermeer.pdf",
+    "factuurnummer": "VDM-26-0882",
+    "factuurdatum": "2026-02-18",
+    "leverancier": "Van der Meer Zalenverhuur & Catering",
+    "totaalIncl": 127602,
+    "subtotaal": 109800,
+    "totaalBtw": 17802,
+    "regels": 5,
+    "verwachteBeslissing": "auto_post",
+    "verwachteCodes": [],
+    "waaromInteressant": "Twee btw-tarieven op één factuur. De uitsplitsing moet per tarief kloppen, niet alleen in totaal."
+  },
+  {
+    "id": "03-creditnota",
+    "bestandsnaam": "03-creditnota-nordwijk.pdf",
+    "factuurnummer": "2026-0433C",
+    "factuurdatum": "2026-04-08",
+    "leverancier": "Nordwijk Cloud Services B.V.",
+    "totaalIncl": -108295,
+    "subtotaal": -89500,
+    "totaalBtw": -18795,
+    "regels": 1,
+    "verwachteBeslissing": "auto_post",
+    "verwachteCodes": [],
+    "waaromInteressant": "Creditnota met negatieve bedragen. Als het documenttype fout gelezen wordt, wordt er geld dubbel geboekt in plaats van teruggeboekt."
+  },
+  {
+    "id": "04-verlegd",
+    "bestandsnaam": "04-verlegd-installatie.pdf",
+    "factuurnummer": "F26-0311",
+    "factuurdatum": "2026-02-27",
+    "leverancier": "Kuipers Installatietechniek B.V.",
+    "totaalIncl": 739910,
+    "subtotaal": 739910,
+    "totaalBtw": 0,
+    "regels": 2,
+    "verwachteBeslissing": "auto_post",
+    "verwachteCodes": [],
+    "waaromInteressant": "Btw verlegd in de bouw. Als dit als een gewone 0%-factuur geboekt wordt, klopt de btw-aangifte niet."
+  },
+  {
+    "id": "05-rekenfout",
+    "bestandsnaam": "05-rekenfout-drukkerij.pdf",
+    "factuurnummer": "24815",
+    "factuurdatum": "2026-01-22",
+    "leverancier": "Drukkerij Hendriksen v.o.f.",
+    "totaalIncl": 332658,
+    "subtotaal": 275750,
+    "totaalBtw": 56908,
+    "regels": 3,
+    "verwachteBeslissing": "review",
+    "verwachteCodes": [
+      "BTW_GROUP_ARITHMETIC"
+    ],
+    "waaromInteressant": "21% over de grondslag komt niet uit op het vermelde btw-bedrag. Een mens die alleen het eindtotaal overtikt, ziet dit nooit."
+  },
+  {
+    "id": "06-iban",
+    "bestandsnaam": "06-iban-advocaten.pdf",
+    "factuurnummer": "WP-2026-0071",
+    "factuurdatum": "2026-03-12",
+    "leverancier": "Wesselink & Partners Advocaten",
+    "totaalIncl": 534650,
+    "subtotaal": 453800,
+    "totaalBtw": 80850,
+    "regels": 2,
+    "verwachteBeslissing": "review",
+    "verwachteCodes": [
+      "IBAN_CHECKSUM_FAILED"
+    ],
+    "waaromInteressant": "Het rekeningnummer voldoet niet aan de mod-97 controle, en de factuur zegt er zelf bij dat het rekeningnummer gewijzigd is. Dit is precies het patroon van factuurfraude."
+  },
+  {
+    "id": "07-gbp",
+    "bestandsnaam": "07-buitenland-gbp.pdf",
+    "factuurnummer": "TA-9931",
+    "factuurdatum": "2026-03-05",
+    "leverancier": "Thornbury Analytics Ltd",
+    "totaalIncl": 545000,
+    "subtotaal": 545000,
+    "totaalBtw": 0,
+    "regels": 2,
+    "verwachteBeslissing": "auto_post",
+    "verwachteCodes": [
+      "NON_EUR_CURRENCY"
+    ],
+    "waaromInteressant": "Buitenlandse leverancier, vreemde valuta, geen KvK en geen Nederlandse postcode. Mag door, maar niet zonder wisselkoers."
+  },
+  {
+    "id": "08-bon",
+    "bestandsnaam": "08-bon-tankstation.pdf",
+    "factuurnummer": null,
+    "factuurdatum": "2026-03-19",
+    "leverancier": "Tankstation De Rotonde",
+    "totaalIncl": 11951,
+    "subtotaal": 9877,
+    "totaalBtw": 2074,
+    "regels": 2,
+    "verwachteBeslissing": "review",
+    "verwachteCodes": [
+      "MISSING_INVOICE_NUMBER"
+    ],
+    "waaromInteressant": "Een kassabon zonder factuurnummer. Boekbaar als kostenpost, maar niet als factuur waarop btw teruggevraagd wordt zonder tussenkomst."
+  },
+  {
+    "id": "09-ontbrekende-regel",
+    "bestandsnaam": "09-ontbrekende-regel-schoonmaak.pdf",
+    "factuurnummer": "HS-2026-0204",
+    "factuurdatum": "2026-03-01",
+    "leverancier": "Helder Schoonmaakdiensten B.V.",
+    "totaalIncl": 220825,
+    "subtotaal": 182500,
+    "totaalBtw": 38325,
+    "regels": 3,
+    "verwachteBeslissing": "review",
+    "verwachteCodes": [
+      "LINES_DO_NOT_SUM_TO_SUBTOTAL"
+    ],
+    "waaromInteressant": "Er staat een regel op de factuur die niet in het subtotaal zit. De factuur is intern consistent op elk ander punt, dus alleen het optellen van de regels vindt dit."
+  }
+]

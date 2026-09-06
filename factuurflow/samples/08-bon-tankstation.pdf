@@ -1,0 +1,75 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /FR 3 0 R /FB 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2477 >>
+stream
+BT 0 g /FB 13 Tf 1 0 0 1 48 781.89 Tm (Tankstation De Rotonde) Tj ET 0 g
+BT 0.35 g /FR 8.5 Tf 1 0 0 1 48 765.89 Tm (Provincialeweg 2) Tj ET 0 g
+BT 0.35 g /FR 8.5 Tf 1 0 0 1 48 753.89 Tm (4854 PB Bavel) Tj ET 0 g
+BT 0 g /FB 15 Tf 1 0 0 1 518.12 781.89 Tm (Bon) Tj ET 0 g
+0.6 G 0.5 w 48 729.89 m 547.28 729.89 l S 0 G
+BT 0.45 g /FB 7.5 Tf 1 0 0 1 48 701.89 Tm (Factuuradres) Tj ET 0 g
+BT 0 g /FR 9.5 Tf 1 0 0 1 48 687.89 Tm ( ) Tj ET 0 g
+BT 0.45 g /FR 8.5 Tf 1 0 0 1 340 701.89 Tm (Factuurnummer) Tj ET 0 g
+BT 0 g /FB 8.5 Tf 1 0 0 1 547.28 701.89 Tm () Tj ET 0 g
+BT 0.45 g /FR 8.5 Tf 1 0 0 1 340 688.89 Tm (Factuurdatum) Tj ET 0 g
+BT 0 g /FR 8.5 Tf 1 0 0 1 503.81 688.89 Tm (2026-03-19) Tj ET 0 g
+0.94 g 48 609.89 499.28 20 re f 0 g
+BT 0.3 g /FB 8 Tf 1 0 0 1 52 615.89 Tm (Omschrijving) Tj ET 0 g
+BT 0.3 g /FB 8 Tf 1 0 0 1 345.55 615.89 Tm (Aantal) Tj ET 0 g
+BT 0.3 g /FB 8 Tf 1 0 0 1 434.66 615.89 Tm (Prijs) Tj ET 0 g
+BT 0.3 g /FB 8 Tf 1 0 0 1 477.34 615.89 Tm (Btw) Tj ET 0 g
+BT 0.3 g /FB 8 Tf 1 0 0 1 515.72 615.89 Tm (Bedrag) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 52 593.89 Tm (Euro 95 E10) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 339.98 593.89 Tm (46,12 L) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 426.98 593.89 Tm (\200 1,99) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 473.99 593.89 Tm (21%) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 513.26 593.89 Tm (\200 91,78) Tj ET 0 g
+0.9 G 0.5 w 48 582.89 m 547.28 582.89 l S 0 G
+BT 0 g /FR 9 Tf 1 0 0 1 52 576.89 Tm (Ruitensproeier antivries 1L) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 355.49 576.89 Tm (1 st) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 426.98 576.89 Tm (\200 6,99) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 473.99 576.89 Tm (21%) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 518.26 576.89 Tm (\200 6,99) Tj ET 0 g
+0.9 G 0.5 w 48 565.89 m 547.28 565.89 l S 0 G
+BT 0.35 g /FR 9 Tf 1 0 0 1 350 547.89 Tm (Subtotaal excl. btw) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 517.26 547.89 Tm (\200 98,77) Tj ET 0 g
+BT 0.35 g /FR 9 Tf 1 0 0 1 350 532.89 Tm (Btw 21% over \200 98,77) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 517.26 532.89 Tm (\200 20,74) Tj ET 0 g
+0.4 G 0.5 w 350 522.89 m 547.28 522.89 l S 0 G
+BT 0 g /FB 10.5 Tf 1 0 0 1 350 511.89 Tm (Totaal te betalen) Tj ET 0 g
+BT 0 g /FB 10.5 Tf 1 0 0 1 506.41 511.89 Tm (\200 119,51) Tj ET 0 g
+BT 0.2 g /FR 8.5 Tf 1 0 0 1 48 141.89 Tm (Pin - transactie 004182 - terminal 3) Tj ET 0 g
+0.85 G 0.5 w 48 79.89 m 547.28 79.89 l S 0 G
+BT 0.4 g /FR 7.5 Tf 1 0 0 1 48 65.89 Tm (IBAN NL74RABO0301946725   |   KvK 20117864   |   Btw-nr. NL201178643B01) Tj ET 0 g
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000121 00000 n 
+0000000218 00000 n 
+0000000320 00000 n 
+0000000462 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+2991
+%%EOF

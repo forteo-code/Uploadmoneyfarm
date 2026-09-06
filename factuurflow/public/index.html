@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FactuurFlow — automatische factuurverwerking</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%2316181d%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-family=%27Helvetica,Arial%27 font-size=%2714%27 font-weight=%27bold%27 fill=%27white%27 text-anchor=%27middle%27%3EFF%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="mark">FF</span>
+    <div>
+      <strong>FactuurFlow</strong>
+      <span class="tagline">Inkomende facturen automatisch gelezen, gecontroleerd en geboekt</span>
+    </div>
+  </div>
+  <div class="status" id="status">verbinden…</div>
+</header>
+
+<main>
+  <aside class="panel samples">
+    <h2>Voorbeeldfacturen</h2>
+    <p class="hint">Negen documenten van verschillende leveranciers. Vier bevatten een fout die een mens over het hoofd ziet.</p>
+    <ul id="sample-list"></ul>
+
+    <div class="upload">
+      <h3>Eigen factuur</h3>
+      <p class="hint" id="upload-hint">PDF of foto, max 12 MB.</p>
+      <label class="file-button">
+        <input type="file" id="file-input" accept=".pdf,.png,.jpg,.jpeg,.webp" hidden>
+        <span>Bestand kiezen</span>
+      </label>
+    </div>
+  </aside>
+
+  <section class="panel document">
+    <div class="panel-head">
+      <h2 id="doc-title">Kies een factuur</h2>
+      <span class="muted" id="doc-sub">Links staan negen voorbeelden.</span>
+    </div>
+    <div class="viewer" id="viewer">
+      <div class="placeholder">
+        <p>Het document verschijnt hier, naast wat eruit gelezen is.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel result">
+    <div id="result">
+      <div class="placeholder">
+        <h3>Wat je hier ziet</h3>
+        <p>Voor elk document: wat eruit gelezen is, welke controles erop losgelaten zijn, op welke grootboekrekening het komt, en de boeking die naar Moneybird of Exact Online gaat.</p>
+        <p>Een factuur gaat alleen automatisch door als alle controles slagen. Slaagt er één niet, dan komt hij met reden op de stapel voor een mens.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /FR 3 0 R /FB 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2804 >>
+stream
+0.13 g 0 753.89 595.28 88 re f 0 g
+BT 1 g /FB 20 Tf 1 0 0 1 48 799.89 Tm (Nordwijk Cloud Services B.V.) Tj ET 0 g
+BT 0.85 g /FR 8 Tf 1 0 0 1 48 779.89 Tm (Kanaalweg 112  \267  3526 KL Utrecht) Tj ET 0 g
+BT 0.85 g /FR 8 Tf 1 0 0 1 48 767.89 Tm (facturatie@nordwijkcloud.example  \267  030 - 250 41 88) Tj ET 0 g
+BT 1 g /FB 16 Tf 1 0 0 1 442.4 791.89 Tm (CREDITNOTA) Tj ET 0 g
+BT 0.45 g /FB 7.5 Tf 1 0 0 1 48 713.89 Tm (Factuuradres) Tj ET 0 g
+BT 0 g /FR 9.5 Tf 1 0 0 1 48 699.89 Tm (De Boer & Vermeulen Advies B.V.) Tj ET 0 g
+BT 0 g /FR 9.5 Tf 1 0 0 1 48 686.89 Tm (Weteringschans 87) Tj ET 0 g
+BT 0 g /FR 9.5 Tf 1 0 0 1 48 673.89 Tm (1017 RZ Amsterdam) Tj ET 0 g
+BT 0.4 g /FR 8.5 Tf 1 0 0 1 48 660.89 Tm (Btw-nr. NL817254092B01) Tj ET 0 g
+BT 0.45 g /FR 8.5 Tf 1 0 0 1 340 707.89 Tm (Factuurnummer) Tj ET 0 g
+BT 0 g /FB 8.5 Tf 1 0 0 1 500.5 707.89 Tm (2026-0433C) Tj ET 0 g
+BT 0.45 g /FR 8.5 Tf 1 0 0 1 340 694.89 Tm (Factuurdatum) Tj ET 0 g
+BT 0 g /FR 8.5 Tf 1 0 0 1 503.81 694.89 Tm (2026-04-08) Tj ET 0 g
+BT 0.45 g /FR 8.5 Tf 1 0 0 1 340 681.89 Tm (Betaling) Tj ET 0 g
+BT 0 g /FR 8.5 Tf 1 0 0 1 415.46 681.89 Tm (Verrekening met openstaand saldo) Tj ET 0 g
+BT 0.45 g /FR 8.5 Tf 1 0 0 1 340 668.89 Tm (Uw referentie) Tj ET 0 g
+BT 0 g /FR 8.5 Tf 1 0 0 1 429.64 668.89 Tm (Correctie op factuur 2026-0417) Tj ET 0 g
+0.94 g 48 615.89 499.28 20 re f 0 g
+BT 0.3 g /FB 8 Tf 1 0 0 1 52 621.89 Tm (Omschrijving) Tj ET 0 g
+BT 0.3 g /FB 8 Tf 1 0 0 1 345.55 621.89 Tm (Aantal) Tj ET 0 g
+BT 0.3 g /FB 8 Tf 1 0 0 1 434.66 621.89 Tm (Prijs) Tj ET 0 g
+BT 0.3 g /FB 8 Tf 1 0 0 1 477.34 621.89 Tm (Btw) Tj ET 0 g
+BT 0.3 g /FB 8 Tf 1 0 0 1 515.72 621.89 Tm (Bedrag) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 52 599.89 Tm (Retour: Managed hosting maart 2026 \(dubbel gefactureerd\)) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 365 599.89 Tm (1) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 413.98 599.89 Tm (-\200 895,00) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 473.99 599.89 Tm (21%) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 505.26 599.89 Tm (-\200 895,00) Tj ET 0 g
+0.9 G 0.5 w 48 588.89 m 547.28 588.89 l S 0 G
+BT 0.35 g /FR 9 Tf 1 0 0 1 350 570.89 Tm (Subtotaal excl. btw) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 509.26 570.89 Tm (-\200 895,00) Tj ET 0 g
+BT 0.35 g /FR 9 Tf 1 0 0 1 350 555.89 Tm (Btw 21% over -\200 895,00) Tj ET 0 g
+BT 0 g /FR 9 Tf 1 0 0 1 509.26 555.89 Tm (-\200 187,95) Tj ET 0 g
+0.4 G 0.5 w 350 545.89 m 547.28 545.89 l S 0 G
+BT 0 g /FB 10.5 Tf 1 0 0 1 350 534.89 Tm (Totaal te betalen) Tj ET 0 g
+BT 0 g /FB 10.5 Tf 1 0 0 1 494.16 534.89 Tm (-\200 1.082,95) Tj ET 0 g
+BT 0.2 g /FR 8.5 Tf 1 0 0 1 48 141.89 Tm (Dit bedrag wordt verrekend met de eerstvolgende factuur.) Tj ET 0 g
+0.85 G 0.5 w 48 79.89 m 547.28 79.89 l S 0 G
+BT 0.4 g /FR 7.5 Tf 1 0 0 1 48 65.89 Tm (IBAN NL27RABO0148920371   |   KvK 62481907   |   Btw-nr. NL624819073B01) Tj ET 0 g
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000121 00000 n 
+0000000218 00000 n 
+0000000320 00000 n 
+0000000462 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+3318
+%%EOF
