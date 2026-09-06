@@ -7,6 +7,38 @@ export const LADDER = [
   { height: 1080, videoKbps: 4500, audioKbps: 160, crf: 22 }, // off by default; see geo.ts
 ] as const;
 
+/**
+ * Delivery codecs.
+ *
+ * Bandwidth is 70-95% of infrastructure cost, so codec efficiency is the single
+ * largest lever available: HEVC and AV1 reach the same perceptual quality at
+ * roughly 30-50% lower bitrate than H.264.
+ *
+ * It is not free. Encoding HEVC costs several times the CPU of H.264 and AV1
+ * more again, paid once per upload against a bandwidth saving paid on every
+ * view - so it pays off in proportion to how often a video is actually watched,
+ * and is a poor trade for a library where most uploads are never viewed.
+ *
+ * H.264 is always produced regardless. It is the only codec every browser and
+ * device decodes, and a viewer who cannot play anything is worth nothing.
+ */
+export type DeliveryCodec = "h264" | "h265" | "av1";
+
+export const CODEC_PROFILES: Record<DeliveryCodec, {
+  /** Bitrate multiplier against the H.264 rung it replaces. */
+  bitrateFactor: number;
+  /** HLS segment container. HEVC and AV1 need fMP4; MPEG-TS support is poor. */
+  container: "mpegts" | "fmp4";
+  label: string;
+}> = {
+  h264: { bitrateFactor: 1.0, container: "mpegts", label: "H.264" },
+  h265: { bitrateFactor: 0.65, container: "fmp4", label: "HEVC" },
+  av1: { bitrateFactor: 0.55, container: "fmp4", label: "AV1" },
+};
+
+/** Codec preference order when a client supports more than one. */
+export const CODEC_PREFERENCE: DeliveryCodec[] = ["av1", "h265", "h264"];
+
 export const HLS_SEGMENT_SECONDS = 6;
 
 /** A view only counts once the viewer has watched this much. */

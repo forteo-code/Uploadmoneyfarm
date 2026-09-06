@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { env } from "../env.js";
-import { LADDER, HLS_SEGMENT_SECONDS } from "@dropreel/shared";
+import { LADDER, HLS_SEGMENT_SECONDS, CODEC_PROFILES, type DeliveryCodec } from "@dropreel/shared";
 import { logger } from "./logger.js";
 
 export type ProbeResult = {
@@ -123,8 +123,10 @@ export async function encodeHls(
   outDir: string,
   rungs: LadderRung[],
   probeResult: ProbeResult,
+  codec: DeliveryCodec = "h264",
 ): Promise<void> {
   const { hasAudio, fps } = probeResult;
+  const profile = CODEC_PROFILES[codec];
 
   // Keyframe interval pinned to the segment length so every segment starts on
   // an IDR frame and players can switch rungs cleanly at any boundary.
@@ -149,17 +151,41 @@ export async function encodeHls(
   ];
 
   rungs.forEach((r, i) => {
+    // The efficient codecs reach the same perceptual quality at a lower
+    // bitrate, so the ceiling drops with them rather than the quality rising -
+    // the whole point is to spend less on delivery, not to look better.
+    const targetKbps = Math.round(r.videoKbps * profile.bitrateFactor);
+
+    args.push("-map", `[v${i}out]`);
+    if (codec === "h265") {
+      args.push(
+        `-c:v:${i}`, "libx265",
+        `-preset:v:${i}`, "faster",
+        `-crf:v:${i}`, String(r.crf + 3), // HEVC CRF is not comparable to x264's
+        `-tag:v:${i}`, "hvc1",            // required for Safari and fMP4
+        `-x265-params:${i}`, `keyint=${gop}:min-keyint=${gop}:scenecut=0:log-level=error`,
+      );
+    } else if (codec === "av1") {
+      args.push(
+        `-c:v:${i}`, "libsvtav1",
+        `-preset:v:${i}`, "8", // SVT-AV1 speed/efficiency dial; 8 is a usable middle
+        `-crf:v:${i}`, String(r.crf + 6),
+        `-svtav1-params:${i}`, `keyint=${gop}`,
+      );
+    } else {
+      args.push(
+        `-c:v:${i}`, "libx264",
+        `-profile:v:${i}`, r.height >= 720 ? "high" : "main",
+        `-preset:v:${i}`, "veryfast",
+        `-crf:v:${i}`, String(r.crf),
+        `-g:v:${i}`, String(gop),
+        `-keyint_min:v:${i}`, String(gop),
+        `-sc_threshold:v:${i}`, "0",
+      );
+    }
     args.push(
-      "-map", `[v${i}out]`,
-      `-c:v:${i}`, "libx264",
-      `-profile:v:${i}`, r.height >= 720 ? "high" : "main",
-      `-preset:v:${i}`, "veryfast",
-      `-crf:v:${i}`, String(r.crf),
-      `-maxrate:v:${i}`, `${r.videoKbps}k`,
-      `-bufsize:v:${i}`, `${r.videoKbps * 2}k`,
-      `-g:v:${i}`, String(gop),
-      `-keyint_min:v:${i}`, String(gop),
-      `-sc_threshold:v:${i}`, "0",
+      `-maxrate:v:${i}`, `${targetKbps}k`,
+      `-bufsize:v:${i}`, `${targetKbps * 2}k`,
     );
   });
 
@@ -175,20 +201,22 @@ export async function encodeHls(
     .map((r, i) => (hasAudio ? `v:${i},a:${i},name:${r.height}p` : `v:${i},name:${r.height}p`))
     .join(" ");
 
+  const fmp4 = profile.container === "fmp4";
   args.push(
     "-f", "hls",
     "-hls_time", String(HLS_SEGMENT_SECONDS),
     "-hls_playlist_type", "vod",
     "-hls_list_size", "0",
     "-hls_flags", "independent_segments",
-    "-hls_segment_type", "mpegts",
-    "-hls_segment_filename", `${outDir}/%v/seg_%05d.ts`,
+    "-hls_segment_type", fmp4 ? "fmp4" : "mpegts",
+    "-hls_segment_filename", `${outDir}/%v/seg_%05d.${fmp4 ? "m4s" : "ts"}`,
+    ...(fmp4 ? ["-hls_fmp4_init_filename", "init.mp4"] : []),
     "-master_pl_name", "master.m3u8",
     "-var_stream_map", varStreamMap,
     `${outDir}/%v/index.m3u8`,
   );
 
-  logger.debug({ rungs: rungs.map((r) => r.height), hasAudio }, "starting hls encode");
+  logger.debug({ codec, rungs: rungs.map((r) => r.height), hasAudio }, "starting hls encode");
   // Six-hour ceiling: long enough for a feature-length source on a modest box,
   // short enough that a wedged encode cannot hold a worker slot indefinitely.
   await run(env.FFMPEG_PATH, args, 6 * 60 * 60 * 1000);
