@@ -29,7 +29,7 @@ const FAQ = [
   ["What can I upload?", "Anything you have the right to share that is legal where we operate. We do not curate by taste or topic."],
   ["When do I get paid?", "Request a payout once you clear the minimum. Earnings settle after a hold period that protects the pool against view fraud."],
   ["What counts as a view?", "A real person watching. Repeat views from the same visitor, bots and datacentre traffic are not paid."],
-  ["Is there a file size limit?", "Up to 320 GB per file, in any common video format."],
+  ["Is there a file size limit?", "Up to 5 GB per file, in any common video format."],
   ["Will my videos show up in search?", "No. There is no public index. Your uploads are reachable only by the links you share."],
   ["How do I get paid?", "Crypto (USDT or BTC), Paxum, or bank transfer."],
 ];
@@ -75,7 +75,7 @@ export default async function Home() {
         )}
 
         <section className="steps">
-          <div className="step"><span className="step-n">1</span><div><strong>Upload</strong><p className="muted">Drag in a file. Any format, up to 320 GB.</p></div></div>
+          <div className="step"><span className="step-n">1</span><div><strong>Upload</strong><p className="muted">Drag in a file. Any common format, up to 5 GB.</p></div></div>
           <div className="step"><span className="step-n">2</span><div><strong>Share</strong><p className="muted">Get a link and an embed code for any site or forum.</p></div></div>
           <div className="step"><span className="step-n">3</span><div><strong>Get paid</strong><p className="muted">Earn on every view. Withdraw whenever you clear the minimum.</p></div></div>
         </section>

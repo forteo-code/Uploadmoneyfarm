@@ -223,6 +223,11 @@ async function main() {
     ["storage.pruneUnwatchedAfterDays", 90],
     // Raw views age out; the hourly rollups are the permanent record.
     ["retention.rawViewDays", 90],
+    // Upload limits. Storage and encode cost are both paid up front, before a
+    // file has earned anything, so the ceiling is a cost decision.
+    ["upload.maxFileBytes", 5 * 1024 * 1024 * 1024],
+    ["upload.dailyBytesPerUser", 50 * 1024 * 1024 * 1024],
+    ["upload.maxConcurrent", 5],
   ];
   for (const [key, value] of config) {
     await prisma.systemConfig.upsert({

@@ -192,7 +192,7 @@ export default function UploadPage() {
               ) : (
                 <>
                   <strong>Drop a video here</strong>
-                  <span className="muted">or click to choose · any format, up to 320 GB</span>
+                  <span className="muted">or click to choose · any format, up to 5 GB</span>
                 </>
               )}
             </div>

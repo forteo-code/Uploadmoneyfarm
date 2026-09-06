@@ -13,10 +13,28 @@ import { getConfig } from "../lib/config.js";
 
 export const uploadsRouter = Router();
 
-/** 32 MiB parts: 10k-part ceiling puts the max source file at ~320 GB. */
-const PART_SIZE = 32 * 1024 * 1024;
-const MAX_CONCURRENT_UPLOADS = 5;
-const DAILY_UPLOAD_BYTES_LIMIT = 200n * 1024n * 1024n * 1024n; // 200 GB/day/user
+/**
+ * 8 MiB parts. Small enough that a dropped connection loses little work on a
+ * bad mobile link, large enough to keep the part count and signing round-trips
+ * down.
+ */
+const PART_SIZE = 8 * 1024 * 1024;
+
+/**
+ * Default per-file ceiling: 5 GiB.
+ *
+ * Sized against what it costs rather than what is technically possible. A
+ * single file consumes storage every month it exists, and CPU proportional to
+ * its length every time it is encoded - both before it has earned anything.
+ * 5 GiB comfortably covers a feature-length 1080p source, which is the longest
+ * thing this audience realistically uploads, and it caps the damage one account
+ * can do before its views have shown whether the content is worth hosting.
+ *
+ * Operators can raise it, but the cost is linear and paid up front.
+ */
+const DEFAULT_MAX_FILE_BYTES = 5 * 1024 * 1024 * 1024;
+const DEFAULT_DAILY_BYTES = 50 * 1024 * 1024 * 1024;
+const DEFAULT_MAX_CONCURRENT = 5;
 
 const ALLOWED_EXT = new Set([
   ".mp4", ".mkv", ".mov", ".avi", ".webm", ".flv", ".wmv", ".m4v", ".mpg",
@@ -56,8 +74,16 @@ uploadsRouter.post(
 
     const userId = req.userId!;
 
+    const [maxFileBytes, dailyBytes, maxConcurrent] = await Promise.all([
+      getConfig<number>("upload.maxFileBytes", DEFAULT_MAX_FILE_BYTES),
+      getConfig<number>("upload.dailyBytesPerUser", DEFAULT_DAILY_BYTES),
+      getConfig<number>("upload.maxConcurrent", DEFAULT_MAX_CONCURRENT),
+    ]);
+
+    if (input.sizeBytes > maxFileBytes) throw new HttpError(413, "file_too_large");
+
     const inFlight = await prisma.video.count({ where: { ownerId: userId, status: "UPLOADING" } });
-    if (inFlight >= MAX_CONCURRENT_UPLOADS) throw new HttpError(429, "too_many_concurrent_uploads");
+    if (inFlight >= maxConcurrent) throw new HttpError(429, "too_many_concurrent_uploads");
 
     // Rolling 24h byte quota. Stops one account from filling the bucket before
     // the fraud rules have any views to judge it on.
@@ -67,7 +93,7 @@ uploadsRouter.post(
       _sum: { sourceBytes: true },
     });
     const used = recent._sum.sourceBytes ?? 0n;
-    if (used + BigInt(input.sizeBytes) > DAILY_UPLOAD_BYTES_LIMIT) {
+    if (used + BigInt(input.sizeBytes) > BigInt(dailyBytes)) {
       throw new HttpError(429, "daily_upload_quota_exceeded");
     }
 

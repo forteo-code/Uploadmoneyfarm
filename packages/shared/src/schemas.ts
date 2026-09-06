@@ -17,7 +17,9 @@ export const loginSchema = z.object({
 
 export const createUploadSchema = z.object({
   filename: z.string().min(1).max(400),
-  sizeBytes: z.number().int().positive().max(64 * 1024 * 1024 * 1024),
+  // Absolute ceiling. The effective limit is upload.maxFileBytes in config,
+  // enforced by the upload route - this only stops absurd values reaching it.
+  sizeBytes: z.number().int().positive().max(32 * 1024 * 1024 * 1024),
   mimeType: z.string().max(160).optional(),
   title: z.string().min(1).max(300).optional(),
   contentRating: z.enum(["SFW", "ADULT"]).default("SFW"),
